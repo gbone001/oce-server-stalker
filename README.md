@@ -160,6 +160,7 @@ src/
 - `npm run build`: Build for production
 - `npm test`: Run test suite
 - `npm run deploy`: Deploy to GitHub Pages
+- `npm run post-scoreboard`: Fetch live server data and post a formatted scoreboard to a Discord channel via webhook
 
 ### Adding New Columns
 
@@ -245,6 +246,34 @@ The app will route `http://` API calls through `REACT_APP_PROXY_URL?target=<http
 ### Custom Domain
 
 To use a custom domain, add a `CNAME` file to the `public/` directory with your domain name.
+
+## Discord Webhook Posting
+
+Automate scoreboard updates in Discord with the provided script.
+
+1. Create a Discord webhook in the target channel (`Server Settings → Integrations → Webhooks`).
+2. Export the webhook URL before running the script:
+   ```bash
+   export DISCORD_WEBHOOK_URL="https://discord.com/api/webhooks/..."
+   # Optional configuration
+   export DISCORD_USERNAME="OCE Server Status"
+   export DISCORD_AVATAR_URL="https://example.com/avatar.png"
+   export DISCORD_ROLE_ID="123456789012345678" # mention role (optional)
+   ```
+3. Execute the script (requires Node.js 18+ for the built-in `fetch` API):
+   ```bash
+   npm run post-scoreboard
+   ```
+
+Flags:
+- `--dry-run`: print the outgoing message instead of posting to Discord.
+- `--no-mention`: suppress the role mention even if `DISCORD_ROLE_ID` is defined.
+
+Example:
+```bash
+DISCORD_WEBHOOK_URL="https://discord.com/api/webhooks/..." \
+npm run post-scoreboard -- --dry-run
+```
 
 ## Browser Support
 

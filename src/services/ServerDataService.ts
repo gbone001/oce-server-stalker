@@ -26,14 +26,15 @@ export class ServerDataService {
       if (!res.ok) {
         throw new Error(`HTTP ${res.status} ${res.statusText}`);
       }
-      let data: any;
+      let raw: any;
       try {
-        data = await res.json();
+        raw = await res.json();
       } catch (e) {
         throw new Error('Invalid JSON response');
       }
 
-      const mapped = this.mapApiResponseToStatus(data, server);
+      const payload = this.unwrapApiResponse(raw);
+      const mapped = this.mapApiResponseToStatus(payload, server);
       return {
         ...mapped,
         status: 'success',
@@ -86,22 +87,52 @@ export class ServerDataService {
     };
   }
 
+  private static unwrapApiResponse(data: any): any {
+    if (!data || typeof data !== 'object') return data;
+    if (data.result && typeof data.result === 'object') return data.result;
+    return data;
+  }
+
   private static mapApiResponseToStatus(
-    data: any,
+    source: any,
     server: ServerConfig
   ): Omit<ServerStatus, 'status' | 'lastUpdated'> {
-    const num = (v: any, d = 0) => (typeof v === 'number' && isFinite(v) ? v : d);
-    const str = (v: any, d = 'Unknown') => (typeof v === 'string' && v.trim() !== '' ? v : d);
+    const data = source ?? {};
+
+    const num = (v: any, d?: number) =>
+      typeof v === 'number' && isFinite(v) ? v : d;
+    const optionalStr = (v: any) =>
+      typeof v === 'string' && v.trim() !== '' ? v : undefined;
 
     // Try multiple common key variants
     const alliesPlayers = num(
-      data?.alliesPlayers ?? data?.allies ?? data?.allies_count ?? data?.numAllies ?? data?.num_allies ?? data?.players?.allies ?? data?.player_count_by_team?.allied
-    , 0);
+      data?.alliesPlayers ??
+        data?.allies ??
+        data?.allies_count ??
+        data?.numAllies ??
+        data?.num_allies ??
+        data?.players?.allies ??
+        data?.player_count_by_team?.allied ??
+        data?.playerCountAllies ??
+        (Array.isArray(data?.players)
+          ? data.players.filter((p: any) => p?.team === 'allies').length
+          : undefined)
+    , 0) ?? 0;
     const axisPlayers = num(
-      data?.axisPlayers ?? data?.axis ?? data?.axis_count ?? data?.numAxis ?? data?.num_axis ?? data?.players?.axis ?? data?.player_count_by_team?.axis
-    , 0);
+      data?.axisPlayers ??
+        data?.axis ??
+        data?.axis_count ??
+        data?.numAxis ??
+        data?.num_axis ??
+        data?.players?.axis ??
+        data?.player_count_by_team?.axis ??
+        data?.playerCountAxis ??
+        (Array.isArray(data?.players)
+          ? data.players.filter((p: any) => p?.team === 'axis').length
+          : undefined)
+    , 0) ?? 0;
 
-    const gameTimeRaw = data?.gameTime ?? data?.match_time ?? data?.time ?? data?.game_time;
+    const gameTimeRaw = data?.gameTime ?? data?.match_time ?? data?.time ?? data?.game_time ?? data?.timeRemainingDisplay;
     const gameTime = typeof gameTimeRaw === 'string'
       ? gameTimeRaw
       : typeof gameTimeRaw === 'number'
@@ -110,25 +141,57 @@ export class ServerDataService {
 
     const timeRemainingSeconds = num(
       data?.time_remaining ?? data?.remaining_time ?? data?.timeRemaining
-    , undefined as any);
+    , undefined);
 
     const alliesScore = num(
-      data?.alliesScore ?? data?.score?.allied ?? data?.score?.allies ?? data?.allies_score ?? data?.scores?.allies
-    , 0);
+      data?.alliesScore ??
+        data?.score?.allied ??
+        data?.score?.allies ??
+        data?.allies_score ??
+        data?.scores?.allies ??
+        data?.allies ??
+        data?.teamScores?.allies
+    , 0) ?? 0;
     const axisScore = num(
-      data?.axisScore ?? data?.score?.axis ?? data?.axis_score ?? data?.scores?.axis
-    , 0);
+      data?.axisScore ??
+        data?.score?.axis ??
+        data?.axis_score ??
+        data?.scores?.axis ??
+        data?.axis ??
+        data?.teamScores?.axis
+    , 0) ?? 0;
 
-    const currentMap = str(
-      data?.currentMap ?? data?.map ?? data?.current_map?.map?.id ?? data?.current_map?.map?.name ?? data?.current_map
-    , 'Unknown');
-    const nextMap = str(
-      data?.nextMap ?? data?.next_map?.map?.id ?? data?.next_map?.map?.name ?? data?.next_map ?? data?.nextMapName
-    , 'Unknown');
+    const currentMap =
+      optionalStr(data?.currentMap) ??
+      optionalStr(data?.map) ??
+      optionalStr(data?.current_map?.map?.pretty_name) ??
+      optionalStr(data?.current_map?.map?.name) ??
+      optionalStr(data?.current_map?.pretty_name) ??
+      optionalStr(data?.current_map?.name) ??
+      optionalStr(data?.current_map?.map?.id) ??
+      optionalStr(data?.current_map) ??
+      'Unknown';
+    const nextMap =
+      optionalStr(data?.nextMap) ??
+      optionalStr(data?.next_map?.map?.pretty_name) ??
+      optionalStr(data?.next_map?.map?.name) ??
+      optionalStr(data?.next_map?.pretty_name) ??
+      optionalStr(data?.next_map?.name) ??
+      optionalStr(data?.next_map?.map?.id) ??
+      optionalStr(data?.next_map) ??
+      optionalStr(data?.nextMapName) ??
+      'Unknown';
 
-    const shortName = str(
-      data?.short_name ?? data?.shortName ?? ''
-    , undefined as any);
+    const shortName =
+      optionalStr(
+        data?.short_name ??
+          data?.shortName ??
+          data?.name_short
+      ) ??
+      optionalStr(
+        data?.name?.short_name ??
+          data?.name?.shortName
+      );
 
     return {
       id: server.id,
