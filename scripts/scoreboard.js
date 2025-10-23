@@ -1,15 +1,21 @@
 const fs = require('fs/promises');
 const path = require('path');
 
-const globalFetch = globalThis.fetch;
-if (typeof globalFetch !== 'function') {
-  throw new Error('Global fetch is unavailable. Run with Node.js 18+ where fetch is built in.');
+let fetchImpl = globalThis.fetch;
+if (typeof fetchImpl !== 'function') {
+  try {
+    ({ fetch: fetchImpl } = require('undici'));
+  } catch (err) {
+    throw new Error(
+      'Global fetch is unavailable and undici could not be loaded. Install Node.js 18+ or add the undici dependency.'
+    );
+  }
 }
 
-const fetch = (...args) => globalFetch(...args);
+const fetch = (...args) => fetchImpl(...args);
 
 async function loadServersConfig() {
-  const rawPath = path.join(process.cwd(), 'public', 'servers.json');
+  const rawPath = path.join(__dirname, '..', 'public', 'servers.json');
   let rawText;
   try {
     rawText = await fs.readFile(rawPath, 'utf8');

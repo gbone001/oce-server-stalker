@@ -254,19 +254,16 @@ export class ServerDataService {
   // If the apiUrl is http:// and the app is served over https, route via a proxy
   private static toProxiedUrl(server: ServerConfig): string {
     try {
-      const u = new URL(server.apiUrl, window.location.origin);
-      const isHttp = u.protocol === 'http:';
-      const isHttpsPage = typeof window !== 'undefined' && window.location.protocol === 'https:';
-      if (isHttp && isHttpsPage) {
-        // Prefer a dedicated proxy base if provided (e.g., Cloudflare Pages domain)
-        const proxyBase = process.env.REACT_APP_PROXY_URL;
-        const target = encodeURIComponent(u.toString());
-        const hostParam = server.hostHeader ? `&host=${encodeURIComponent(server.hostHeader)}` : '';
-        if (proxyBase) {
-          // Ensure no trailing slash
-          return `${proxyBase.replace(/\/$/, '')}?target=${target}${hostParam}`;
-        }
-        // Fall back to same-origin + PUBLIC_URL mounted functions path (if hosted with functions)
+      const hasWindow = typeof window !== 'undefined';
+      const base = hasWindow ? window.location.origin : undefined;
+      const u = base ? new URL(server.apiUrl, base) : new URL(server.apiUrl);
+      const proxyBaseEnv = process.env.REACT_APP_PROXY_URL;
+      const target = encodeURIComponent(u.toString());
+      const hostParam = server.hostHeader ? `&host=${encodeURIComponent(server.hostHeader)}` : '';
+      if (proxyBaseEnv) {
+        return `${proxyBaseEnv.replace(/\/$/, '')}?target=${target}${hostParam}`;
+      }
+      if (hasWindow && process.env.NODE_ENV === 'production') {
         const rawBase = process.env.PUBLIC_URL || '';
         const basePath = rawBase === '.' ? '' : rawBase.replace(/\/$/, '');
         return `${window.location.origin}${basePath}/api?target=${target}${hostParam}`;

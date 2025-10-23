@@ -247,6 +247,23 @@ The app will route `http://` API calls through `REACT_APP_PROXY_URL?target=<http
 
 To use a custom domain, add a `CNAME` file to the `public/` directory with your domain name.
 
+## Self-Hosting on a Host Port (No Cloudflare)
+
+Run the dashboard directly on the host without Cloudflare Pages by serving the pre-built assets and using the bundled proxy.
+
+1. Build the React app:
+   ```bash
+   npm run build
+   ```
+2. Start the host server (defaults to port `51823`):
+   ```bash
+   npm run start:host
+   # optionally choose a different port
+    PORT=5173 npm run start:host
+   ```
+3. Open `http://<host>:<port>/` in your browser.  
+   The `/api` endpoint on this server forwards requests to the configured game server APIs, so no additional Cloudflare deployment is required.
+
 ## Discord Webhook Posting
 
 Automate scoreboard updates in Discord with the provided script.
