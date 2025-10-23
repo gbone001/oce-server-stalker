@@ -14,4 +14,8 @@
   "name": "SCC Public",
   "url": "http://154.26.158.99:7010/api/get_public_info",
   "statsUrl": "https://server-stats.anzr.org/servers/scc-public"
+}, {
+  "name": "TFMC",
+  "url": "http://31.220.108.75:7010/api/get_public_info",
+  "statsUrl": "https://server-stats.anzr.org/servers/tfmc"
 }]
