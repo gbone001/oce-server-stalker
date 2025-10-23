@@ -6,6 +6,14 @@ import { useServerData } from './hooks/useServerData';
 function App() {
   const { isDark, toggleTheme } = useTheme();
   const { serverStatuses, lastRefresh, loading, error, refreshData, reloadConfig } = useServerData();
+  const statusArray = React.useMemo(() => Array.from(serverStatuses.values()), [serverStatuses]);
+  const hasStatuses = statusArray.length > 0;
+  const allOnline = hasStatuses && statusArray.every((server) => server.status === 'success');
+  const statusLabel = allOnline ? 'Status Link Established' : 'Status Link Interrupted';
+  const statusTone = allOnline ? 'text-emerald-300 border-emerald-500/30 bg-emerald-500/10' : 'text-red-300 border-red-500/30 bg-red-500/10';
+  const statusSubtitle = allOnline
+    ? 'All monitored relays responding within expected thresholds.'
+    : 'One or more relays are offline or failing health checks.';
 
   if (loading) {
     return (
@@ -75,8 +83,12 @@ function App() {
                   </p>
                 </div>
                 <div className="flex items-center justify-start gap-3 md:justify-end">
-                  <div className="rounded-full border border-accent-500/40 px-4 py-2 text-xs uppercase tracking-[0.3em] text-accent-100/90">
-                    Status Link Established
+                  <div className={`flex flex-col items-center rounded-2xl border px-4 py-3 text-center text-[10px] uppercase tracking-[0.28em] ${statusTone}`}>
+                    <span>{statusLabel}</span>
+                    <span className="mt-2 block h-px w-full bg-white/10" aria-hidden="true" />
+                    <span className="mt-2 text-[9px] tracking-[0.22em] text-white/70">
+                      {statusSubtitle}
+                    </span>
                   </div>
                 </div>
               </div>

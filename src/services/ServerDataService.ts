@@ -1,6 +1,23 @@
 import { ServerConfig, ServerStatus, ServersConfig } from '../types';
 
 export class ServerDataService {
+  private static slugify(value: string): string {
+    return value
+      .toLowerCase()
+      .replace(/&/g, 'and')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/-{2,}/g, '-')
+      .replace(/(^-|-$)/g, '');
+  }
+
+  private static resolveStatsUrl(server: ServerConfig): string | undefined {
+    if (server.statsUrl) return server.statsUrl;
+    if (!server.name) return undefined;
+    const slug = this.slugify(server.name);
+    if (!slug) return undefined;
+    return `https://server-stats.anzr.org/servers/${slug}`;
+  }
+
   static async fetchServersConfig(): Promise<ServersConfig> {
     try {
       const configUrl = `${process.env.PUBLIC_URL || ''}/servers.json`;
@@ -39,6 +56,7 @@ export class ServerDataService {
         ...mapped,
         status: 'success',
         lastUpdated: new Date(),
+        statsUrl: this.resolveStatsUrl(server),
       };
     } catch (error) {
       return {
@@ -47,12 +65,15 @@ export class ServerDataService {
         status: 'error',
         alliesPlayers: 0,
         axisPlayers: 0,
+        playerCount: 0,
+        maxPlayerCount: undefined,
         gameTime: '--:--',
         alliesScore: 0,
         axisScore: 0,
         currentMap: 'Unknown',
         nextMap: 'Unknown',
         lastUpdated: new Date(),
+        statsUrl: this.resolveStatsUrl(server),
         error: error instanceof Error ? error.message : 'Unknown error',
       };
     } finally {
@@ -75,6 +96,8 @@ export class ServerDataService {
       name: server.name,
       alliesPlayers: Math.floor(Math.random() * 32),
       axisPlayers: Math.floor(Math.random() * 32),
+      playerCount: Math.floor(Math.random() * 64),
+      maxPlayerCount: 64,
       gameTime: `${Math.floor(Math.random() * 60)
         .toString()
         .padStart(2, '0')}:${Math.floor(Math.random() * 60)
@@ -131,6 +154,24 @@ export class ServerDataService {
           ? data.players.filter((p: any) => p?.team === 'axis').length
           : undefined)
     , 0) ?? 0;
+
+    const playerCount = num(
+      data?.player_count ??
+        data?.players ??
+        data?.population ??
+        data?.playerCount
+    , alliesPlayers + axisPlayers) ?? (alliesPlayers + axisPlayers);
+
+    const maxPlayerCount = num(
+      data?.max_player_count ??
+        data?.maxPlayers ??
+        data?.max_player ??
+        data?.max_playercount ??
+        data?.max_player_count ??
+        data?.max_player_capacity ??
+        data?.maxPlayerCount ??
+        data?.slots
+    , undefined);
 
     const gameTimeRaw = data?.gameTime ?? data?.match_time ?? data?.time ?? data?.game_time ?? data?.timeRemainingDisplay;
     const gameTime = typeof gameTimeRaw === 'string'
@@ -199,6 +240,8 @@ export class ServerDataService {
       shortName: shortName || undefined,
       alliesPlayers,
       axisPlayers,
+      playerCount,
+      maxPlayerCount: typeof maxPlayerCount === 'number' && isFinite(maxPlayerCount) ? maxPlayerCount : undefined,
       gameTime,
       timeRemainingSeconds: typeof timeRemainingSeconds === 'number' ? timeRemainingSeconds : undefined,
       alliesScore,
@@ -269,6 +312,8 @@ export namespace ServerDataService {
         if (name && url) {
           const out: any = { id, name, apiUrl: url };
           if (hostHeader) out.hostHeader = hostHeader;
+          if (typeof (s as any).statsUrl === 'string') out.statsUrl = (s as any).statsUrl.trim();
+          if (typeof (s as any).stats === 'string' && !out.statsUrl) out.statsUrl = (s as any).stats.trim();
           result.push(out);
         }
       });
@@ -308,6 +353,8 @@ export namespace ServerDataService {
         const out: any = { id, name, apiUrl };
         if (typeof (s as any).hostHeader === 'string') out.hostHeader = (s as any).hostHeader;
         if (typeof (s as any).host === 'string') out.hostHeader = (s as any).host;
+        if (typeof (s as any).statsUrl === 'string') out.statsUrl = (s as any).statsUrl;
+        if (typeof (s as any).stats === 'string' && !out.statsUrl) out.statsUrl = (s as any).stats;
         result.push(out);
       }
     });

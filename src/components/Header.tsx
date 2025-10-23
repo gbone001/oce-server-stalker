@@ -7,24 +7,20 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({ onToggleTheme, isDark }) => {
   const pngLogo = `${process.env.PUBLIC_URL}/anzr-logo.png`;
-  const webpLogo = `${process.env.PUBLIC_URL}/anzr-logo.webp`;
   return (
     <header className="relative border-b border-white/10 bg-black/70 shadow-[0_20px_60px_rgba(0,0,0,0.35)] backdrop-blur">
       <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-8 sm:px-6 md:flex-row md:items-center md:justify-between lg:px-8">
         <div className="flex items-center gap-4">
-          <picture>
-            <source srcSet={webpLogo} type="image/webp" />
-            <img
-              src={pngLogo}
-              alt="ANZR crest"
-              width={84}
-              height={84}
-              decoding="async"
-              loading="eager"
-              fetchPriority="high"
-              className="h-20 w-20 rounded-2xl border border-accent-500/40 shadow-lg shadow-black/40"
-            />
-          </picture>
+          <img
+            src={pngLogo}
+            alt="ANZR crest"
+            width={84}
+            height={84}
+            decoding="async"
+            loading="eager"
+            fetchPriority="high"
+            className="h-20 w-20 rounded-2xl border border-accent-500/40 shadow-lg shadow-black/40 object-cover"
+          />
           <div>
             <p className="text-xs uppercase tracking-[0.45em] text-accent-300">
               From the Ashes We Rise

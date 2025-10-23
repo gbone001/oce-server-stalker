@@ -3,6 +3,7 @@ export interface ServerConfig {
   name: string;
   apiUrl: string;
   hostHeader?: string; // optional override for Host header at proxy
+  statsUrl?: string;
 }
 
 export interface ServerStatus {
@@ -12,6 +13,8 @@ export interface ServerStatus {
   status: 'success' | 'error';
   alliesPlayers: number;
   axisPlayers: number;
+  playerCount: number;
+  maxPlayerCount?: number;
   gameTime: string;
   timeRemainingSeconds?: number;
   alliesScore: number; // 0-5 points
@@ -19,6 +22,7 @@ export interface ServerStatus {
   currentMap: string;
   nextMap: string;
   lastUpdated: Date;
+  statsUrl?: string;
   error?: string;
 }
 
