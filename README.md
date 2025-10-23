@@ -160,7 +160,7 @@ src/
 - `npm run build`: Build for production
 - `npm test`: Run test suite
 - `npm run deploy`: Deploy to GitHub Pages
-- `npm run post-scoreboard`: Fetch live server data and post a formatted scoreboard to a Discord channel via webhook
+- `npm run post-scoreboard`: _removed_ (use the Discord bot instead)
 
 ### Adding New Columns
 
@@ -263,36 +263,6 @@ Run the dashboard directly on the host without Cloudflare Pages by serving the p
    ```
 3. Open `http://<host>:<port>/` in your browser.  
    The `/api` endpoint on this server forwards requests to the configured game server APIs, so no additional Cloudflare deployment is required.
-
-## Discord Webhook Posting
-
-Automate scoreboard updates in Discord with the provided script.
-
-1. Create a Discord webhook in the target channel (`Server Settings → Integrations → Webhooks`).
-2. Populate a `.env` file (copy `.env.example`) or export the variables before running the script:
-   ```bash
-   cp .env.example .env
-   # edit .env with your credentials, or export them manually
-   export DISCORD_WEBHOOK_URL="https://discord.com/api/webhooks/..."
-   # Optional configuration
-   export DISCORD_USERNAME="OCE Server Status"
-   export DISCORD_AVATAR_URL="https://example.com/avatar.png"
-   export DISCORD_ROLE_ID="123456789012345678" # mention role (optional)
-   ```
-3. Execute the script (requires Node.js 18+ for the built-in `fetch` API):
-   ```bash
-   npm run post-scoreboard
-   ```
-
-Flags:
-- `--dry-run`: print the outgoing message instead of posting to Discord.
-- `--no-mention`: suppress the role mention even if `DISCORD_ROLE_ID` is defined.
-
-Example:
-```bash
-DISCORD_WEBHOOK_URL="https://discord.com/api/webhooks/..." \
-npm run post-scoreboard -- --dry-run
-```
 
 ## Discord Bot (Slash Commands)
 

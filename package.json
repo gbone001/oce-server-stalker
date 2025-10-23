@@ -28,7 +28,6 @@
     "build": "craco build",
     "test": "craco test",
     "eject": "react-scripts eject",
-    "post-scoreboard": "node scripts/post-discord-scoreboard.js",
     "discord-bot": "node scripts/discord-bot.js",
     "start:host": "node server/host-server.js"
   },
