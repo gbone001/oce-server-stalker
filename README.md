@@ -269,8 +269,10 @@ Run the dashboard directly on the host without Cloudflare Pages by serving the p
 Automate scoreboard updates in Discord with the provided script.
 
 1. Create a Discord webhook in the target channel (`Server Settings → Integrations → Webhooks`).
-2. Export the webhook URL before running the script:
+2. Populate a `.env` file (copy `.env.example`) or export the variables before running the script:
    ```bash
+   cp .env.example .env
+   # edit .env with your credentials, or export them manually
    export DISCORD_WEBHOOK_URL="https://discord.com/api/webhooks/..."
    # Optional configuration
    export DISCORD_USERNAME="OCE Server Status"
@@ -291,6 +293,19 @@ Example:
 DISCORD_WEBHOOK_URL="https://discord.com/api/webhooks/..." \
 npm run post-scoreboard -- --dry-run
 ```
+
+## Discord Bot (Slash Commands)
+
+Run the interval scoreboard bot directly with Discord.js.
+
+1. Copy `.env.example` to `.env` and fill in `DISCORD_BOT_TOKEN`, `DISCORD_GUILD_ID`, `DISCORD_CHANNEL_ID`, and any optional settings.
+2. Start the bot (registers slash commands and posts on the configured interval):
+   ```bash
+   npm run discord-bot
+   ```
+3. To adjust the frequency from Discord, use `/setfrequency <minutes>`; use `/stalknow` to trigger an immediate update.
+
+For background operation, run the command with a process manager such as `pm2` or `systemd`, making sure it starts in the repository root so `.env` can be loaded.
 
 ## Browser Support
 

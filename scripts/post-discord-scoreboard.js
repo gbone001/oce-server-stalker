@@ -16,6 +16,8 @@
  *   --no-mention  Disable role mention even if DISCORD_ROLE_ID is set.
  */
 
+const path = require('path');
+require('dotenv').config({ path: path.resolve(__dirname, '..', '.env') });
 const { fetchServerStatuses, buildDiscordMessage } = require('./scoreboard');
 
 const globalFetch = globalThis.fetch;

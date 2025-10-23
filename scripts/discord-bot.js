@@ -12,6 +12,8 @@
  *   SCOREBOARD_INTERVAL_MINUTES - Initial posting interval in minutes (default: 5).
  */
 
+const path = require('path');
+require('dotenv').config({ path: path.resolve(__dirname, '..', '.env') });
 const { Client, GatewayIntentBits, Partials, Events, SlashCommandBuilder } = require('discord.js');
 const { fetchServerStatuses, buildDiscordMessage } = require('./scoreboard');
 
