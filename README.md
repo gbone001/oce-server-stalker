@@ -185,6 +185,20 @@ To add new columns to the server table:
 
 ## Deployment
 
+### Railway
+
+Railway uses the included `railway.toml` to build the dashboard and run the bundled Express host server.
+
+1. Install the Railway CLI (`npm i -g @railway/cli`) or create a new project from the Railway dashboard.
+2. From the repository root run `railway up` and choose (or create) a service; the CLI uploads the project and reads `railway.toml`.
+3. In the Railway project settings add the required environment variables:
+   - `ALLOWED_HOSTS`: comma-separated `host:port` list of game servers the proxy may contact.
+   - Optional `ALLOW_ALL_TARGETS=true` to bypass host validation for testing.
+   - Any other proxy or Discord bot secrets you need (see `.env.example` for reference).
+4. Deploy. The Nixpacks build runs `npm ci --include=dev && npm run build` and the service starts with `npm run start:host`, serving the compiled React UI on the assigned port.
+
+Health checks hit `/` by default, and the Express server listens on `process.env.PORT` which Railway automatically injects. Logs and redeploys can be managed via `railway logs` / `railway redeploy`.
+
 ### Deploy on Cloudflare Pages
 
 - Connect this repository in Cloudflare → Workers & Pages → Create application → Pages.

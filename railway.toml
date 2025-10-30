@@ -1,0 +1,8 @@
+[build]
+builder = "NIXPACKS"
+buildCommand = "npm ci --include=dev && npm run build"
+
+[deploy]
+startCommand = "npm run start:host"
+healthcheckPath = "/"
+restartPolicyType = "ON_FAILURE"
