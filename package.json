@@ -13,8 +13,12 @@
     "@types/react": "^19.1.12",
     "@types/react-dom": "^19.1.9",
     "discord.js": "^14.15.3",
+    "compression": "^1.7.4",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
+    "undici": "^6.19.8",
     "react-scripts": "5.0.1",
     "typescript": "^4.9.5",
     "web-vitals": "^2.1.4"
@@ -24,8 +28,8 @@
     "build": "craco build",
     "test": "craco test",
     "eject": "react-scripts eject",
-    "post-scoreboard": "node scripts/post-discord-scoreboard.js",
-    "discord-bot": "node scripts/discord-bot.js"
+    "discord-bot": "node scripts/discord-bot.js",
+    "start:host": "node server/host-server.js"
   },
   "eslintConfig": {
     "extends": [

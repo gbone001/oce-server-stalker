@@ -17,13 +17,15 @@ export async function onRequest(context: any): Promise<Response> {
   const qHost = url.searchParams.get('host');
   let targetUrl: string;
 
+  const allowAll =
+    String(env?.ALLOW_ALL_TARGETS || '').toLowerCase() === 'true';
+  const allowed = String(env?.ALLOWED_HOSTS || '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+
   if (qTarget) {
     // Proxy arbitrary target only if allowed by ALLOWED_HOSTS
-    const allowed = String(env?.ALLOWED_HOSTS || '')
-      .split(',')
-      .map((s) => s.trim())
-      .filter(Boolean);
-    const allowAll = String(env?.ALLOW_ALL_TARGETS || '').toLowerCase() === 'true';
     let parsed: URL;
     try {
       parsed = new URL(qTarget);
@@ -34,7 +36,12 @@ export async function onRequest(context: any): Promise<Response> {
       });
     }
     const hostPort = parsed.host; // includes :port
-    if (!allowAll && !allowed.includes(hostPort)) {
+    const hostname = parsed.hostname;
+    const port = parsed.port || (parsed.protocol === 'https:' ? '443' : '80');
+    const defaultAllowed =
+      allowed.length === 0 && isDefaultAllowedTarget(hostname, port);
+
+    if (!allowAll && !defaultAllowed && !allowed.includes(hostPort)) {
       return new Response(JSON.stringify({ error: 'Target not allowed', host: hostPort }), {
         status: 403,
         headers: { ...corsHeaders(), 'Content-Type': 'application/json' },
@@ -100,4 +107,11 @@ function corsHeaders(): HeadersInit {
 function applyCors(h: Headers) {
   const base = corsHeaders();
   for (const [k, v] of Object.entries(base)) h.set(k, v as string);
+}
+
+function isDefaultAllowedTarget(hostname: string, port: string): boolean {
+  const ipLike = /^(\d{1,3}\.){3}\d{1,3}$/.test(hostname);
+  if (!ipLike) return false;
+  const allowedPorts = new Set(['7010', '7011']);
+  return allowedPorts.has(port || '80');
 }

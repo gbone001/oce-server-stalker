@@ -32,12 +32,15 @@ export const useServerData = () => {
             status: 'error',
             alliesPlayers: 0,
             axisPlayers: 0,
+            playerCount: 0,
+            maxPlayerCount: undefined,
             gameTime: '--:--',
             alliesScore: 0,
             axisScore: 0,
             currentMap: 'Unknown',
             nextMap: 'Unknown',
             lastUpdated: new Date(),
+            statsUrl: server.statsUrl,
             error: 'Failed to fetch data'
           });
         }
