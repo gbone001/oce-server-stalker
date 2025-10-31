@@ -1,303 +1,91 @@
-# OCE Server Status Dashboard
+# OCE Server Stalker Discord Bot
 
-A clean, modular React/TypeScript dashboard for monitoring OCE server status and player counts in real-time.
+A lightweight Discord.js bot that monitors configured Hell Let Loose servers and posts scoreboard snapshots into a guild channel on a schedule. It also exposes slash commands so moderators can adjust the posting frequency or trigger an on-demand update.
 
 ## Features
+- Periodic scoreboard posts with automatic chunking to stay under Discord’s message limits.
+- `/setfrequency` slash command to update the posting cadence without redeploying.
+- `/stalknow` slash command for an immediate scoreboard refresh.
+- Optional role mention on the first message of each scoreboard batch.
+- Configurable server list via `config/servers.json` or a custom `SERVERS_CONFIG_PATH`.
 
-- **Real-time Monitoring**: Polls server APIs every 1 minute for up-to-date information
-- **Comprehensive Display**: Shows server name, player counts (Allies/Axis), game time, scores (0-5 points), current map, and next map
-- **Status Indicators**: Clear visual indicators for server status (online/offline) with error details
-- **Last Refresh Timer**: Shows when data was last updated with manual refresh option
-- **Dark Mode**: Toggle between light and dark themes with red and gold accent colors
-- **Responsive Design**: Clean, simple interface that works on all devices
-- **Modular Architecture**: Well-organized React/TypeScript components for easy maintenance
+## Requirements
+- Node.js 18.17 or newer.
+- A Discord bot token with the `applications.commands` and `bot` scopes enabled.
+- Channel ID and guild ID where the bot will be installed.
 
-## Quick Start
-
-1. **Clone the repository:**
+## Getting Started
+1. **Clone the repository**
    ```bash
-   git clone https://github.com/gbone001/oce-server-status.git
-   cd oce-server-status
+   git clone https://github.com/gbone001/oce-server-stalker.git
+   cd oce-server-stalker
    ```
-
-2. **Install dependencies:**
+2. **Install dependencies**
    ```bash
    npm install
    ```
-
-3. **Start development server:**
+3. **Configure environment variables**
    ```bash
-   npm start
+   cp .env.example .env
    ```
+   Populate the required values:
+   - `DISCORD_BOT_TOKEN`
+   - `DISCORD_GUILD_ID`
+   - `DISCORD_CHANNEL_ID`
+   - Optional: `DISCORD_ROLE_ID`, `SCOREBOARD_INTERVAL_MINUTES`, `SERVERS_CONFIG_PATH`
 
-4. **Build for production:**
-   ```bash
-   npm run build
-   ```
-
-## Configuration
-
-### Updating Server List
-
-Edit the `public/servers.json` file to add, remove, or modify servers:
-
-```json
-{
-  "servers": [
-    {
-      "id": "unique-server-id",
-      "name": "Display Name",
-      "apiUrl": "https://api.example.com/server/status"
-    }
-  ]
-}
-```
-
-**Server Configuration Fields:**
-- `id`: Unique identifier for the server
-- `name`: Display name shown in the dashboard
-- `apiUrl`: API endpoint that returns server status data
-
-### Expected API Response Format
-
-Your server APIs should return JSON in the following format:
-
-```json
-{
-  "alliesPlayers": 15,
-  "axisPlayers": 12,
-  "gameTime": "45:23",
-  "alliesScore": 3,
-  "axisScore": 2,
-  "currentMap": "Carentan",
-  "nextMap": "Foy"
-}
-```
-
-**API Response Fields:**
-- `alliesPlayers`: Number of players on Allies team
-- `axisPlayers`: Number of players on Axis team
-- `gameTime`: Current game time in MM:SS format
-- `alliesScore`: Allies score (0-5 points)
-- `axisScore`: Axis score (0-5 points)
-- `currentMap`: Name of the currently active map
-- `nextMap`: Name of the next map in rotation
-
-### Customizing Polling Interval
-
-To change how often the dashboard polls for updates, modify the `pollInterval` in `src/config/index.ts`:
-
-```typescript
-export const defaultConfig: AppConfig = {
-  pollInterval: 60000, // 1 minute in milliseconds
-  theme: {
-    isDark: false
-  }
-};
-```
-
-### Customizing Colors and Branding
-
-Update the color scheme in `tailwind.config.js`:
-
-```javascript
-theme: {
-  extend: {
-    colors: {
-      primary: '#dc2626', // red accent
-      gold: '#fbbf24',    // gold accent
-    }
-  }
-}
-```
-
-Replace the ANZR logo by updating `public/anzr-logo.svg` with your own logo file.
-
-## Project Structure
-
-```
-src/
-├── components/          # React components
-│   ├── Header.tsx      # App header with logo and theme toggle
-│   ├── ServerTable.tsx # Main data display table
-│   ├── StatusIndicator.tsx # Server status indicators
-│   └── LastRefreshTimer.tsx # Refresh timer and manual refresh
-├── hooks/              # Custom React hooks
-│   ├── useTheme.ts     # Theme management
-│   └── useServerData.ts # Data fetching and polling
-├── services/           # Data services
-│   └── ServerDataService.ts # API communication
-├── types/              # TypeScript type definitions
-│   └── index.ts        # All interface definitions
-└── config/             # App configuration
-    └── index.ts        # Default settings and constants
-```
-
-## Component Architecture
-
-### Data Flow
-1. **useServerData** hook loads server configuration from `servers.json`
-2. Hook polls each server's API endpoint every minute
-3. **ServerTable** component displays the aggregated data
-4. **StatusIndicator** shows connection status for each server
-5. **LastRefreshTimer** tracks and displays update timing
-
-### Theme Management
-- **useTheme** hook manages dark/light mode state
-- Theme preference persisted in localStorage
-- CSS classes applied to document root for global theming
-
-### Error Handling
-- Failed API calls show error status with details
-- Mock data generation for development/demo purposes
-- Graceful degradation when servers are unreachable
-
-## Development
-
-### Available Scripts
-
-- `npm start`: Start development server
-- `npm run build`: Build for production
-- `npm test`: Run test suite
-- `npm run deploy`: Deploy to GitHub Pages
-- `npm run post-scoreboard`: _removed_ (use the Discord bot instead)
-
-### Adding New Columns
-
-To add new columns to the server table:
-
-1. **Update the TypeScript interface** in `src/types/index.ts`:
-   ```typescript
-   export interface ServerStatus {
-     // ... existing fields
-     newField: string;
+4. **Configure tracked servers**
+   Edit `config/servers.json` (or the file pointed to by `SERVERS_CONFIG_PATH`). Each entry supports:
+   ```json
+   {
+     "name": "Display name shown in Discord",
+     "url": "http://example.com:7010/api/get_public_info",
+     "host": "optional.host.header",
+     "statsUrl": "https://optional-link-used-in-replies"
    }
    ```
+   `url` is required and should return the public Hell Let Loose server status JSON. `host`/`hostHeader` can be supplied when a reverse proxy requires it. `statsUrl` is forwarded unchanged in the scoreboard payload for downstream formatting.
 
-2. **Update the API service** in `src/services/ServerDataService.ts` to handle the new field
+## Running Locally
+Start the bot with:
+```bash
+npm start
+```
 
-3. **Add the column** to the table in `src/components/ServerTable.tsx`:
-   ```tsx
-   <th>New Field</th>
-   // ... and in the table body:
-   <td>{server.newField}</td>
-   ```
+On first launch the bot registers its slash commands in the configured guild. It then posts the scoreboard immediately and sets up the interval defined by `SCOREBOARD_INTERVAL_MINUTES` (defaults to 5).
+
+### Slash Commands
+- `/setfrequency minutes:<int>` – update the posting interval (1–180 minutes).
+- `/stalknow` – trigger an immediate scoreboard refresh. The bot acknowledges straight away and edits the ephemeral reply once the scoreboard is posted or if an error occurs.
 
 ## Deployment
 
 ### Railway
+The included `railway.toml` builds the bot with `npm install --omit=dev` and starts it with `npm start`. Because the bot does not expose an HTTP server, disable any HTTP health checks the service may create automatically. Provide your environment variables (see `.env.example`) in the Railway dashboard and deploy.
 
-Railway uses the included `railway.toml` to build the dashboard and run the bundled Express host server.
+### Other Platforms
+Any Node-compatible process manager will work:
+- **PM2** – `pm2 start scripts/discord-bot.js --name oce-server-stalker`
+- **systemd** – point `ExecStart` at `node /path/to/scripts/discord-bot.js`
 
-1. Install the Railway CLI (`npm i -g @railway/cli`) or create a new project from the Railway dashboard.
-2. From the repository root run `railway up` and choose (or create) a service; the CLI uploads the project and reads `railway.toml`.
-3. In the Railway project settings add the required environment variables:
-   - `ALLOWED_HOSTS`: comma-separated `host:port` list of game servers the proxy may contact.
-   - Optional `ALLOW_ALL_TARGETS=true` to bypass host validation for testing.
-   - Any other proxy or Discord bot secrets you need (see `.env.example` for reference).
-4. Deploy. The Nixpacks build runs `npm ci --include=dev && npm run build` and the service starts with `npm run start:host`, serving the compiled React UI on the assigned port.
+Ensure the working directory contains the `.env` (or that the relevant variables are exported).
 
-Health checks hit `/` by default, and the Express server listens on `process.env.PORT` which Railway automatically injects. Logs and redeploys can be managed via `railway logs` / `railway redeploy`.
+## Configuration Reference
 
-### Deploy on Cloudflare Pages
+| Variable | Description |
+| --- | --- |
+| `DISCORD_BOT_TOKEN` | Bot token from the Discord developer portal. |
+| `DISCORD_GUILD_ID` | Guild (server) where slash commands will be registered. |
+| `DISCORD_CHANNEL_ID` | Text channel where scoreboard updates are posted. |
+| `DISCORD_ROLE_ID` | Optional role to mention on the first scoreboard message. |
+| `SCOREBOARD_INTERVAL_MINUTES` | Posting frequency (defaults to 5). |
+| `SERVERS_CONFIG_PATH` | Absolute or relative path to the servers JSON file (defaults to `config/servers.json`). |
 
-- Connect this repository in Cloudflare → Workers & Pages → Create application → Pages.
-- Build command: `npm ci && npm run build`
-- Output directory: `build`
-- Functions: auto-detected from `functions/api/[[path]].ts` (no wrangler.toml needed)
-- Environment variables (Production):
-  - `NODE_VERSION=18`
-  - `ALLOWED_HOSTS=148.113.196.189:7010,145.223.22.23:7010,147.93.104.243:7010,154.26.158.99:7010`
-  - Optional `TARGET_ORIGIN=http://148.113.196.189:7010`
-
-Proxy behavior
-- The app runs over HTTPS on Cloudflare Pages and automatically proxies any `http://` backend to `/api?target=<http-url>` on the same domain.
-- The function validates the target against `ALLOWED_HOSTS` and returns the response with permissive CORS.
-
-Note: The GitHub Pages deployment instructions below are deprecated now that this project targets Cloudflare Pages.
-
-### GitHub Pages (gh-pages branch)
-
-This project is configured to publish the production build to the `gh-pages` branch.
-
-1) In GitHub: Settings → Pages
-- Build and deployment → Source: Deploy from a branch
-- Branch: `gh-pages` and Folder: `/` (root)
-
-2) Locally, deploy the site:
-```bash
-npm install
-npm run deploy
-```
-This builds the app and publishes `build/` to the `gh-pages` branch. The page will be served at:
-`https://gbone001.github.io/oce-server-status`
-
-Notes:
-- `package.json:homepage` is already set for correct asset paths.
-- Assets that use `process.env.PUBLIC_URL` (e.g., logo, `servers.json`) will resolve under the GitHub Pages subpath.
-
-### GitHub Actions (manual runs and proxy env)
-
-- Manually trigger a deploy: In GitHub → Actions → select the "Deploy to GitHub Pages" workflow → Run workflow (this uses workflow_dispatch).
-- Configure proxy base for mixed-content avoidance:
-  - Repo → Settings → Secrets and variables → Actions → Variables (preferred) or Secrets
-  - Add `REACT_APP_PROXY_URL` with value `https://<your-pages-project>.pages.dev/api`
-  - The workflow passes this env into the CRA build so HTTP APIs are routed through the Cloudflare proxy.
-
-### Cloudflare Pages Proxy (to avoid mixed content)
-
-If your server APIs are `http://` and your site runs on `https://` (GitHub Pages), enable the Cloudflare proxy and point the app at it:
-
-- Deploy this same repo to Cloudflare Pages (auto-detects `functions/`)
-- In Cloudflare Pages, set environment variables:
-  - `ALLOWED_HOSTS`: comma-separated `host:port` list for your backends
-  - Optional `TARGET_ORIGIN`: default backend for path-based proxy
-- Build your GitHub Pages site with:
-  - `REACT_APP_PROXY_URL=https://<your-pages-project>.pages.dev/api`
-
-The app will route `http://` API calls through `REACT_APP_PROXY_URL?target=<http-url>` to avoid mixed content and CORS issues.
-
-### Custom Domain
-
-To use a custom domain, add a `CNAME` file to the `public/` directory with your domain name.
-
-## Self-Hosting on a Host Port (No Cloudflare)
-
-Run the dashboard directly on the host without Cloudflare Pages by serving the pre-built assets and using the bundled proxy.
-
-1. Build the React app:
-   ```bash
-   npm run build
-   ```
-2. Start the host server (defaults to port `51823`):
-   ```bash
-   npm run start:host
-   # optionally choose a different port
-    PORT=5173 npm run start:host
-   ```
-3. Open `http://<host>:<port>/` in your browser.  
-   The `/api` endpoint on this server forwards requests to the configured game server APIs, so no additional Cloudflare deployment is required.
-
-## Discord Bot (Slash Commands)
-
-Run the interval scoreboard bot directly with Discord.js.
-
-1. Copy `.env.example` to `.env` and fill in `DISCORD_BOT_TOKEN`, `DISCORD_GUILD_ID`, `DISCORD_CHANNEL_ID`, and any optional settings.
-2. Start the bot (registers slash commands and posts on the configured interval):
-   ```bash
-   npm run discord-bot
-   ```
-3. To adjust the frequency from Discord, use `/setfrequency <minutes>`; use `/stalknow` to trigger an immediate update.
-
-For background operation, run the command with a process manager such as `pm2` or `systemd`, making sure it starts in the repository root so `.env` can be loaded.
-
-## Browser Support
-
-- Chrome (latest)
-- Firefox (latest)
-- Safari (latest)
-- Edge (latest)
+## Development Notes
+- The bot uses `undici` when the global `fetch` implementation is unavailable.
+- Scoreboard messages are split across multiple Discord posts if they would exceed ~1800 characters.
+- `config/servers.json` is the only persistent data the bot requires; feel free to mount or replace it per environment.
 
 ## License
 
-This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
+Licensed under the Apache License 2.0. See [LICENSE](LICENSE) for details.

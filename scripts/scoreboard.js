@@ -14,43 +14,79 @@ if (typeof fetchImpl !== 'function') {
 
 const fetch = (...args) => fetchImpl(...args);
 
+const CONFIG_ENV_PATH = process.env.SERVERS_CONFIG_PATH;
+const DEFAULT_CONFIG_PATHS = [
+  path.join(__dirname, '..', 'config', 'servers.json'),
+  path.join(__dirname, '..', 'public', 'servers.json'),
+];
+
+function formatPathLabel(value) {
+  const relative = path.relative(process.cwd(), value);
+  return relative && !relative.startsWith('..') ? relative : value;
+}
+
+async function resolveConfigPath() {
+  if (CONFIG_ENV_PATH) {
+    return path.resolve(CONFIG_ENV_PATH);
+  }
+
+  for (const candidate of DEFAULT_CONFIG_PATHS) {
+    try {
+      await fs.access(candidate);
+      return candidate;
+    } catch (err) {
+      if (err && err.code !== 'ENOENT') {
+        throw new Error(`Unable to access ${formatPathLabel(candidate)}: ${err.message}`);
+      }
+    }
+  }
+
+  throw new Error(
+    'Unable to locate servers configuration. Provide config/servers.json or set SERVERS_CONFIG_PATH.'
+  );
+}
+
 async function loadServersConfig() {
-  const rawPath = path.join(__dirname, '..', 'public', 'servers.json');
+  const configPath = await resolveConfigPath();
+  const label = formatPathLabel(configPath);
+
   let rawText;
   try {
-    rawText = await fs.readFile(rawPath, 'utf8');
+    rawText = await fs.readFile(configPath, 'utf8');
   } catch (err) {
-    throw new Error(`Unable to read public/servers.json: ${err.message}`);
+    throw new Error(`Unable to read ${label}: ${err.message}`);
   }
 
   let data;
   try {
     data = JSON.parse(rawText);
   } catch (err) {
-    throw new Error(`public/servers.json contains invalid JSON: ${err.message}`);
+    throw new Error(`${label} contains invalid JSON: ${err.message}`);
   }
 
   if (Array.isArray(data)) {
-    return data.map((entry, index) => normalizeArrayEntry(entry, index));
+    return data.map((entry, index) => normalizeArrayEntry(entry, index, label));
   }
 
   if (!data || typeof data !== 'object') {
-    throw new Error('public/servers.json must contain an array or an object with a "servers" array.');
+    throw new Error(`${label} must contain an array or an object with a "servers" array.`);
   }
 
   if (!Array.isArray(data.servers)) {
-    throw new Error('public/servers.json: object format requires a "servers" array');
+    throw new Error(`${label}: object format requires a "servers" array`);
   }
 
-  return data.servers.map((entry, index) => normalizeObjectEntry(entry, index));
+  return data.servers.map((entry, index) => normalizeObjectEntry(entry, index, label));
 }
 
-function normalizeArrayEntry(entry, index) {
+function normalizeArrayEntry(entry, index, label) {
   if (!entry || typeof entry !== 'object') {
-    throw new Error(`public/servers.json[${index}] must be an object`);
+    throw new Error(`${label}[${index}] must be an object`);
   }
   const name = typeof entry.name === 'string' ? entry.name.trim() : '';
   const url = typeof entry.url === 'string' ? entry.url.trim() : '';
+  const statsUrl =
+    typeof entry.statsUrl === 'string' && entry.statsUrl.trim().length > 0 ? entry.statsUrl.trim() : undefined;
   const hostHeader =
     typeof entry.host === 'string'
       ? entry.host.trim()
@@ -58,29 +94,30 @@ function normalizeArrayEntry(entry, index) {
         ? entry.hostHeader.trim()
         : undefined;
   if (!name || !url) {
-    throw new Error(`public/servers.json[${index}] requires non-empty "name" and "url" fields`);
+    throw new Error(`${label}[${index}] requires non-empty "name" and "url" fields`);
   }
   return {
     id: slugify(name) || `server-${index + 1}`,
     name,
     apiUrl: url,
     hostHeader,
+    statsUrl,
   };
 }
 
-function normalizeObjectEntry(entry, index) {
+function normalizeObjectEntry(entry, index, label) {
   if (!entry || typeof entry !== 'object') {
-    throw new Error(`public/servers.json.servers[${index}] must be an object`);
+    throw new Error(`${label}.servers[${index}] must be an object`);
   }
-  const { id, name, apiUrl, hostHeader, host } = entry;
+  const { id, name, apiUrl, hostHeader, host, statsUrl } = entry;
   if (typeof id !== 'string' || !id.trim()) {
-    throw new Error(`public/servers.json.servers[${index}].id must be a non-empty string`);
+    throw new Error(`${label}.servers[${index}].id must be a non-empty string`);
   }
   if (typeof name !== 'string' || !name.trim()) {
-    throw new Error(`public/servers.json.servers[${index}].name must be a non-empty string`);
+    throw new Error(`${label}.servers[${index}].name must be a non-empty string`);
   }
   if (typeof apiUrl !== 'string' || !apiUrl.trim()) {
-    throw new Error(`public/servers.json.servers[${index}].apiUrl must be a non-empty string`);
+    throw new Error(`${label}.servers[${index}].apiUrl must be a non-empty string`);
   }
   const hostOverride =
     typeof hostHeader === 'string' && hostHeader.trim()
@@ -93,6 +130,7 @@ function normalizeObjectEntry(entry, index) {
     name: name.trim(),
     apiUrl: apiUrl.trim(),
     hostHeader: hostOverride,
+    statsUrl: typeof statsUrl === 'string' && statsUrl.trim().length > 0 ? statsUrl.trim() : undefined,
   };
 }
 
@@ -137,7 +175,7 @@ async function fetchServerStatus(server) {
     return {
       ...mapApiResponse(payload, server),
       status: 'success',
-      statsUrl: server.apiUrl, // <— add this
+      statsUrl: server.statsUrl,
     };
   } catch (err) {
     return {
@@ -145,6 +183,7 @@ async function fetchServerStatus(server) {
       name: server.name,
       status: 'error',
       error: err instanceof Error ? err.message : String(err),
+      statsUrl: server.statsUrl,
     };
   } finally {
     clearTimeout(timeout);
@@ -246,6 +285,73 @@ function formatSeconds(value) {
   return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
 }
 
+function buildDiscordMessage(statuses) {
+  if (!Array.isArray(statuses) || statuses.length === 0) {
+    return 'No servers configured.';
+  }
+
+  const headers = ['Server', 'Players', 'Allies', 'Axis', 'Score', 'Map', 'Next', 'Time'];
+  const rows = statuses.map((status) => {
+    const base = {
+      server: status.name ?? 'Unknown',
+      players: '--',
+      allies: '--',
+      axis: '--',
+      score: '--',
+      map: status.status === 'success' ? status.currentMap ?? 'Unknown' : status.error ?? 'Offline',
+      next: status.status === 'success' ? status.nextMap ?? 'Unknown' : '',
+      time: status.status === 'success' ? formatSeconds(status.timeRemainingSeconds) : '--:--',
+    };
+
+    if (status.status === 'success') {
+      const total =
+        typeof status.totalPlayers === 'number'
+          ? status.totalPlayers
+          : (status.alliesPlayers ?? 0) + (status.axisPlayers ?? 0);
+      base.players = String(total);
+      base.allies = String(status.alliesPlayers ?? 0);
+      base.axis = String(status.axisPlayers ?? 0);
+      base.score = `${status.alliesScore ?? 0}-${status.axisScore ?? 0}`;
+      if (status.shortName) {
+        base.server = `${base.server} (${status.shortName})`;
+      }
+    } else {
+      base.score = 'ERR';
+      base.map = status.error ?? 'Unknown error';
+      base.next = '';
+    }
+
+    return [
+      base.server,
+      base.players,
+      base.allies,
+      base.axis,
+      base.score,
+      base.map,
+      base.next,
+      base.time,
+    ];
+  });
+
+  const widths = headers.map((header, index) => {
+    const colValues = rows.map((row) => row[index] ?? '');
+    return Math.max(header.length, ...colValues.map((value) => value.length));
+  });
+
+  const renderRow = (row) =>
+    row
+      .map((value, index) => {
+        const cell = value ?? '';
+        return cell.padEnd(widths[index], ' ');
+      })
+      .join(' | ');
+
+  const separator = widths.map((width) => '-'.repeat(width)).join('-|-');
+  const output = [renderRow(headers), separator, ...rows.map(renderRow)].join('\n');
+
+  return ['```', output, '```'].join('\n');
+}
+
 // 4) NEW: multi-message splitter (keeps header per chunk, wraps each chunk in its own ``` fence)
 function buildDiscordMessages(statuses, maxLen = 1800) {
   const full = buildDiscordMessage(statuses);
@@ -289,6 +395,6 @@ module.exports = {
   loadServersConfig,
   fetchServerStatuses,
   buildDiscordMessage,
-  buildDiscordMessages,  
+  buildDiscordMessages,
   formatSeconds,
 };
