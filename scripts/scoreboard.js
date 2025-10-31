@@ -137,6 +137,7 @@ async function fetchServerStatus(server) {
     return {
       ...mapApiResponse(payload, server),
       status: 'success',
+      statsUrl: server.apiUrl, // <— add this
     };
   } catch (err) {
     return {
@@ -246,29 +247,76 @@ function formatSeconds(value) {
 }
 
 function buildDiscordMessage(statuses) {
-  if (!statuses.length) {
-    return 'No servers configured.';
-  }
+  if (!statuses.length) return 'No servers configured.';
 
-  const lines = statuses.map((status) => {
-    if (status.status !== 'success') {
-      return `:x: **${status.name}** - Offline (${status.error ?? 'Unknown error'})`;
+  // Column schema: [title, width]
+  const COLS = [
+    ['Server', 24],
+    ['Current Map Match Score', 40],
+    ['Total Players', 13],
+    ['Allies vs Axis', 15],
+    ['Next Map', 22],
+    ['Detailed Stats Link', 38],
+    ['Last Updated', 19],
+  ];
+
+  const pad = (v, w) => {
+    const s = String(v ?? '');
+    if (s.length === w) return s;
+    if (s.length < w) return s + ' '.repeat(w - s.length);
+    return s.slice(0, Math.max(0, w - 1)) + '…';
+  };
+
+  const nowSydney = () =>
+    new Date().toLocaleString('en-AU', { timeZone: 'Australia/Sydney', hour12: false });
+
+  const header = COLS.map(([h, w]) => pad(h, w)).join(' | ');
+  const sep = COLS.map(([_, w]) => '-'.repeat(Math.min(w, 40))).join('-|-');
+
+  const rows = statuses.map((st) => {
+    if (st.status !== 'success') {
+      const name = st.name ?? st.id ?? 'Unknown';
+      const err = st.error ? `Offline (${st.error})` : 'Offline';
+      return [
+        pad(name, COLS[0][1]),
+        pad(err, COLS[1][1]),
+        pad('-', COLS[2][1]),
+        pad('-', COLS[3][1]),
+        pad('-', COLS[4][1]),
+        pad('-', COLS[5][1]),
+        pad(nowSydney(), COLS[6][1]),
+      ].join(' | ');
     }
+
     const total =
-      typeof status.totalPlayers === 'number' ? status.totalPlayers : status.alliesPlayers + status.axisPlayers;
-    const mapLine = `${status.currentMap} -> ${status.nextMap}`;
-    const timeLine = formatSeconds(status.timeRemainingSeconds);
+      typeof st.totalPlayers === 'number'
+        ? st.totalPlayers
+        : (st.alliesPlayers || 0) + (st.axisPlayers || 0);
+
+    const mapScore = `${st.currentMap}  ${st.alliesScore ?? 0}–${st.axisScore ?? 0} (${formatSeconds(st.timeRemainingSeconds)})`;
+    const avs = `${st.alliesPlayers ?? 0} vs ${st.axisPlayers ?? 0}`;
+    const serverName = `${st.name}${st.shortName ? ` (${st.shortName})` : ''}`;
+    // angle brackets to force proper autolink in Discord, and so long URLs don’t break the grid visually
+    const link = st.statsUrl ? `<${st.statsUrl}>` : '-';
+
     return [
-      `:white_check_mark: **${status.name}**${status.shortName ? ` (${status.shortName})` : ''}`,
-      `Players: ${total} (Allies ${status.alliesPlayers} / Axis ${status.axisPlayers})`,
-      `Score: ${status.alliesScore} - ${status.axisScore}`,
-      `Maps: ${mapLine}`,
-      `Time Remaining: ${timeLine}`,
-    ].join('\n');
+      pad(serverName, COLS[0][1]),
+      pad(mapScore, COLS[1][1]),
+      pad(total, COLS[2][1]),
+      pad(avs, COLS[3][1]),
+      pad(st.nextMap || 'Unknown', COLS[4][1]),
+      pad(link, COLS[5][1]),
+      pad(nowSydney(), COLS[6][1]),
+    ].join(' | ');
   });
 
-  return lines.join('\n\n');
+  // Wrap in a code block so Discord preserves fixed-width alignment.
+  const table = ['```', header, sep, ...rows, '```'].join('\n');
+
+  // If we only had offline rows AND no successes, keep the table anyway—it’s clearer.
+  return table;
 }
+
 
 module.exports = {
   loadServersConfig,
