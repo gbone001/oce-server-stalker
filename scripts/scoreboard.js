@@ -418,7 +418,15 @@ function buildDiscordMessage(statuses) {
       .join(' | ');
 
   const separator = widths.map((width) => '-'.repeat(width)).join('-|-');
-  const output = [renderRow(headers), separator, ...rows.map(renderRow)].join('\n');
+  // Insert a thin dashed stub between rows and once after the header separator
+  const interRowSeparator = '---';
+  const bodyLines = [];
+  for (let i = 0; i < rows.length; i++) {
+    // Add stub before each row (places one after header and between rows)
+    bodyLines.push(interRowSeparator);
+    bodyLines.push(renderRow(rows[i]));
+  }
+  const output = [renderRow(headers), separator, ...bodyLines].join('\n');
 
   return ['```', output, '```'].join('\n');
 }
