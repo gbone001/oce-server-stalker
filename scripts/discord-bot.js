@@ -119,11 +119,17 @@ client.on(Events.InteractionCreate, async (interaction) => {
       return;
     }
 
-    await interaction.deferReply({ ephemeral: true });
+    try {
+      await interaction.reply({ content: 'Refreshing the scoreboard now…', ephemeral: true });
+    } catch (err) {
+      console.error('Failed to acknowledge slash command:', err);
+      return;
+    }
+
     try {
       const triggered = await postScoreboard('slash');
       if (triggered) {
-        await interaction.editReply({ content: 'Refreshing the scoreboard now.' });
+        await interaction.editReply({ content: 'Scoreboard refreshed and posted.' });
       } else {
         await interaction.editReply({
           content: 'Unable to post right now; please try again shortly.',
