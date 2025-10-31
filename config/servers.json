@@ -276,9 +276,9 @@
     "hidden": true
   },
   {
-    "name": "TFMC",
-    "url": "http://31.220.108.75:7012/api/get_public_info",
-    "statsUrl": "http://31.220.108.75:7012/",
+    "name": "TFMC Public",
+    "url": "http://31.220.108.75:7010/api/get_public_info",
+    "statsUrl": "http://31.220.108.75:7010/",
     "hidden": false
   },
   {

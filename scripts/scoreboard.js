@@ -176,10 +176,13 @@ async function fetchServerStatus(server) {
     }
 
     const payload = unwrapApiResponse(raw);
+    let serverUrlBase = '';
+    try { serverUrlBase = new URL(server.apiUrl).origin; } catch {}
     return {
       ...mapApiResponse(payload, server),
       status: 'success',
       statsUrl: server.statsUrl,
+      serverUrlBase,
       fetchedAt: new Date().toISOString(),
     };
   } catch (err) {
@@ -189,6 +192,7 @@ async function fetchServerStatus(server) {
       status: 'error',
       error: err instanceof Error ? err.message : String(err),
       statsUrl: server.statsUrl,
+      serverUrlBase: (() => { try { return new URL(server.apiUrl).origin; } catch { return undefined; } })(),
       fetchedAt: new Date().toISOString(),
     };
   } finally {
@@ -329,7 +333,6 @@ function buildDiscordMessage(statuses) {
     'Tot',
     'A/A',
     'Next',
-    'Stats',
     'Updated',
   ];
 
@@ -343,7 +346,10 @@ function buildDiscordMessage(statuses) {
   const shortStats = (url) => {
     try {
       const u = new URL(url);
-      return `${u.protocol}//${u.hostname}`; // clickable, compact
+      // include host (preserve port) and a distinguishing tail from the path
+      const parts = u.pathname.split('/').filter(Boolean);
+      const tail = parts.length ? `/${parts[parts.length - 1]}` : '';
+      return `${u.host}${tail}`;
     } catch {
       return safeUrl(url);
     }
@@ -366,7 +372,6 @@ function buildDiscordMessage(statuses) {
       ? `${status.alliesPlayers ?? 0}-${status.axisPlayers ?? 0}`
       : '0-0';
     const nextMap = truncate(isOk ? (status.nextMap || 'Unknown') : '', 16);
-    const statsLink = shortStats(status.statsUrl);
   const updated = formatRelativeFromIso(status.fetchedAt);
 
     return [
@@ -375,7 +380,6 @@ function buildDiscordMessage(statuses) {
       String(total),
       alliesVsAxis,
       nextMap,
-      statsLink,
       updated,
     ];
   });
@@ -443,5 +447,6 @@ module.exports = {
   fetchServerStatuses,
   buildDiscordMessage,
   buildDiscordMessages,
+  
   formatSeconds,
 };
