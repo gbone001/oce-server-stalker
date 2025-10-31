@@ -49,6 +49,8 @@ const client = new Client({
 });
 
 let channelRef = null;
+// Track the most recent scoreboard message IDs for editing
+let lastMessageIds = [];
 let postingIntervalMinutes = DEFAULT_INTERVAL_MINUTES;
 let intervalHandle = null;
 let inFlight = false;
@@ -143,15 +145,46 @@ client.on(Events.InteractionCreate, async (interaction) => {
   }
 });
 
-// helper: send an array of messages sequentially
-async function sendMessagesSequentially(channel, messages, roleId) {
-  if (!messages || !messages.length) return;
-  let first = true;
-  for (const msg of messages) {
-    const content = first && roleId ? `<@&${roleId}>\n\n${msg}` : msg;
-    await channel.send({ content });
-    first = false;
+// helper: upsert an array of messages (edit-in-place when possible)
+async function upsertMessages(channel, messages, roleId) {
+  if (!messages || !messages.length) return [];
+  const ids = [];
+  const addPingToFirst = roleId && lastMessageIds.length === 0; // only when posting fresh
+
+  const editCount = Math.min(lastMessageIds.length, messages.length);
+  // Edit existing messages
+  for (let i = 0; i < editCount; i++) {
+    const id = lastMessageIds[i];
+    try {
+      const msgObj = await channel.messages.fetch(id);
+      await msgObj.edit({ content: messages[i] });
+      ids.push(id);
+    } catch (err) {
+      // If we cannot edit (deleted/permission), fall back to sending a new one
+      const newMsg = await channel.send({ content: messages[i] });
+      ids.push(newMsg.id);
+    }
   }
+
+  // Send additional messages if the new set is longer
+  for (let i = editCount; i < messages.length; i++) {
+    const content = i === 0 && addPingToFirst ? `<@&${roleId}>\n\n${messages[i]}` : messages[i];
+    const newMsg = await channel.send({ content });
+    ids.push(newMsg.id);
+  }
+
+  // Delete any leftover old messages if the new set is shorter
+  for (let i = messages.length; i < lastMessageIds.length; i++) {
+    const id = lastMessageIds[i];
+    try {
+      const msgObj = await channel.messages.fetch(id);
+      await msgObj.delete();
+    } catch {
+      // ignore deletion errors
+    }
+  }
+
+  return ids;
 }
 
 
@@ -169,9 +202,10 @@ async function postScoreboard(trigger) {
 
   let success = false;
   try {
-    const statuses = await fetchServerStatuses();
-    const messages = buildDiscordMessages(statuses, 1800);
-    await sendMessagesSequentially(channelRef, messages, ROLE_ID);
+  const statuses = await fetchServerStatuses();
+  const messages = buildDiscordMessages(statuses, 1800);
+  const ids = await upsertMessages(channelRef, messages, ROLE_ID);
+  lastMessageIds = ids;
     console.log(
       `Scoreboard posted successfully (${messages.length} message${messages.length === 1 ? '' : 's'}).`
     );

@@ -176,6 +176,7 @@ async function fetchServerStatus(server) {
       ...mapApiResponse(payload, server),
       status: 'success',
       statsUrl: server.statsUrl,
+      fetchedAt: new Date().toISOString(),
     };
   } catch (err) {
     return {
@@ -184,6 +185,7 @@ async function fetchServerStatus(server) {
       status: 'error',
       error: err instanceof Error ? err.message : String(err),
       statsUrl: server.statsUrl,
+      fetchedAt: new Date().toISOString(),
     };
   } finally {
     clearTimeout(timeout);
@@ -285,51 +287,74 @@ function formatSeconds(value) {
   return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
 }
 
+function formatRelativeFromIso(iso) {
+  try {
+    const then = new Date(iso);
+    if (Number.isNaN(then.getTime())) return '--';
+    const now = new Date();
+    let diff = Math.max(0, Math.floor((now.getTime() - then.getTime()) / 1000)); // seconds
+    if (diff === 0) return '<1s ago';
+    const days = Math.floor(diff / 86400); diff -= days * 86400;
+    const hours = Math.floor(diff / 3600); diff -= hours * 3600;
+    const minutes = Math.floor(diff / 60); diff -= minutes * 60;
+    const seconds = diff;
+    if (days > 0) return `${days}d ${hours}h ago`;
+    if (hours > 0) return `${hours}h ${minutes}m ago`;
+    if (minutes > 0) return `${minutes}m ${seconds}s ago`;
+    return `${seconds}s ago`;
+  } catch {
+    return '--';
+  }
+}
+
+function safeUrl(value) {
+  if (typeof value !== 'string' || value.trim().length === 0) return '-';
+  return value.trim();
+}
+
 function buildDiscordMessage(statuses) {
   if (!Array.isArray(statuses) || statuses.length === 0) {
     return 'No servers configured.';
   }
 
-  const headers = ['Server', 'Players', 'Allies', 'Axis', 'Score', 'Map', 'Next', 'Time'];
+  // Requested columns:
+  // Server - Current Map Match Score - Total Players - Allies vs Axis - Next Map - Detailed Stats Link - Last Updated
+  const headers = [
+    'Server',
+    'Current Map Match Score',
+    'Total Players',
+    'Allies vs Axis',
+    'Next Map',
+    'Detailed Stats Link',
+    'Last Updated',
+  ];
   const rows = statuses.map((status) => {
-    const base = {
-      server: status.name ?? 'Unknown',
-      players: '--',
-      allies: '--',
-      axis: '--',
-      score: '--',
-      map: status.status === 'success' ? status.currentMap ?? 'Unknown' : status.error ?? 'Offline',
-      next: status.status === 'success' ? status.nextMap ?? 'Unknown' : '',
-      time: status.status === 'success' ? formatSeconds(status.timeRemainingSeconds) : '--:--',
-    };
+    const serverName = status.name ? String(status.name) : 'Unknown';
+    const withShort = status.shortName ? `${serverName} (${status.shortName})` : serverName;
 
-    if (status.status === 'success') {
-      const total =
-        typeof status.totalPlayers === 'number'
+    const isOk = status.status === 'success';
+    const currentMap = isOk ? (status.currentMap || 'Unknown') : (status.error || 'Offline');
+    const matchScore = isOk ? `${status.alliesScore ?? 0}-${status.axisScore ?? 0}` : 'ERR';
+    const total = isOk
+      ? (typeof status.totalPlayers === 'number'
           ? status.totalPlayers
-          : (status.alliesPlayers ?? 0) + (status.axisPlayers ?? 0);
-      base.players = String(total);
-      base.allies = String(status.alliesPlayers ?? 0);
-      base.axis = String(status.axisPlayers ?? 0);
-      base.score = `${status.alliesScore ?? 0}-${status.axisScore ?? 0}`;
-      if (status.shortName) {
-        base.server = `${base.server} (${status.shortName})`;
-      }
-    } else {
-      base.score = 'ERR';
-      base.map = status.error ?? 'Unknown error';
-      base.next = '';
-    }
+          : (status.alliesPlayers ?? 0) + (status.axisPlayers ?? 0))
+      : 0;
+    const alliesVsAxis = isOk
+      ? `${status.alliesPlayers ?? 0}-${status.axisPlayers ?? 0}`
+      : '0-0';
+    const nextMap = isOk ? (status.nextMap || 'Unknown') : '';
+    const statsLink = safeUrl(status.statsUrl);
+  const updated = formatRelativeFromIso(status.fetchedAt);
 
     return [
-      base.server,
-      base.players,
-      base.allies,
-      base.axis,
-      base.score,
-      base.map,
-      base.next,
-      base.time,
+      withShort,
+      `${currentMap} ${matchScore}`,
+      String(total),
+      alliesVsAxis,
+      nextMap,
+      statsLink,
+      updated,
     ];
   });
 
