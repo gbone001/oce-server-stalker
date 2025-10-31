@@ -15,7 +15,13 @@
 const path = require('path');
 require('dotenv').config({ path: path.resolve(__dirname, '..', '.env') });
 const { Client, GatewayIntentBits, Partials, Events, SlashCommandBuilder } = require('discord.js');
-const { fetchServerStatuses, buildDiscordMessage } = require('./scoreboard');
+//const { fetchServerStatuses, buildDiscordMessage } = require('./scoreboard');
+// top: import the new function
+const {
+  fetchServerStatuses,
+  buildDiscordMessage,
+  buildDiscordMessages, // <— new
+} = require('./scoreboard');
 
 const BOT_TOKEN = process.env.DISCORD_BOT_TOKEN;
 const GUILD_ID = process.env.DISCORD_GUILD_ID;
@@ -120,7 +126,32 @@ client.on(Events.InteractionCreate, async (interaction) => {
   }
 });
 
+// helper: send an array of messages sequentially
+async function sendMessagesSequentially(channel, messages, roleId) {
+  if (!messages || !messages.length) return;
+  let first = true;
+  for (const msg of messages) {
+    const content = first && roleId ? `<@&${roleId}>\n\n${msg}` : msg;
+    await channel.send({ content });
+    first = false;
+  }
+}
+
+
 async function postScoreboard(trigger) {
+// inside postScoreboard(...)
+const statuses = await fetchServerStatuses();
+// old single string (kept for fallback):
+// let content = buildDiscordMessage(statuses);
+
+// new: chunk-aware
+const messages = buildDiscordMessages(statuses, 1800);
+
+// old role + length trim + single send -> replace with:
+await sendMessagesSequentially(channelRef, messages, ROLE_ID);
+
+console.log(`Scoreboard posted successfully (${messages.length} message${messages.length === 1 ? '' : 's'}).`);
+
   if (!channelRef) return false;
   if (inFlight) {
     console.warn('Skipped scoreboard post because a previous run is still in progress.');
@@ -134,9 +165,9 @@ async function postScoreboard(trigger) {
     if (ROLE_ID) {
       content = `<@&${ROLE_ID}>\n\n${content}`;
     }
-    if (content.length > 1900) {
-      content = `${content.slice(0, 1897)}...`;
-    }
+//    if (content.length > 1900) {
+//      content = `${content.slice(0, 1897)}...`;
+//    }
     await channelRef.send({ content });
     console.log('Scoreboard posted successfully.');
   } catch (err) {

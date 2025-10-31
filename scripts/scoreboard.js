@@ -246,81 +246,49 @@ function formatSeconds(value) {
   return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
 }
 
-function buildDiscordMessage(statuses) {
-  if (!statuses.length) return 'No servers configured.';
+// 4) NEW: multi-message splitter (keeps header per chunk, wraps each chunk in its own ``` fence)
+function buildDiscordMessages(statuses, maxLen = 1800) {
+  const full = buildDiscordMessage(statuses);
+  if (full.length <= maxLen) return [full];
 
-  // Column schema: [title, width]
-  const COLS = [
-    ['Server', 24],
-    ['Current Map Match Score', 40],
-    ['Total Players', 13],
-    ['Allies vs Axis', 15],
-    ['Next Map', 22],
-    ['Detailed Stats Link', 38],
-    ['Last Updated', 19],
-  ];
+  // We need to split by rows but keep header/separator on every chunk.
+  const lines = full.split('\n');
+  if (lines.length < 5) return [full]; // unexpected, just return as-is
 
-  const pad = (v, w) => {
-    const s = String(v ?? '');
-    if (s.length === w) return s;
-    if (s.length < w) return s + ' '.repeat(w - s.length);
-    return s.slice(0, Math.max(0, w - 1)) + '…';
-  };
+  // lines[0] = "```", lines[1] = header, lines[2] = sep, ..., lines[last] = "```"
+  const headerFenceStart = lines[0];
+  const headerLine = lines[1];
+  const sepLine = lines[2];
+  const fenceEnd = lines[lines.length - 1];
+  const dataRows = lines.slice(3, -1);
 
-  const nowSydney = () =>
-    new Date().toLocaleString('en-AU', { timeZone: 'Australia/Sydney', hour12: false });
-
-  const header = COLS.map(([h, w]) => pad(h, w)).join(' | ');
-  const sep = COLS.map(([_, w]) => '-'.repeat(Math.min(w, 40))).join('-|-');
-
-  const rows = statuses.map((st) => {
-    if (st.status !== 'success') {
-      const name = st.name ?? st.id ?? 'Unknown';
-      const err = st.error ? `Offline (${st.error})` : 'Offline';
-      return [
-        pad(name, COLS[0][1]),
-        pad(err, COLS[1][1]),
-        pad('-', COLS[2][1]),
-        pad('-', COLS[3][1]),
-        pad('-', COLS[4][1]),
-        pad('-', COLS[5][1]),
-        pad(nowSydney(), COLS[6][1]),
-      ].join(' | ');
+  const chunks = [];
+  let current = [headerFenceStart, headerLine, sepLine];
+  for (const row of dataRows) {
+    // +1 for newline when joined; be conservative
+    const prospective = [...current, row, fenceEnd].join('\n');
+    if (prospective.length > maxLen) {
+      // close current chunk
+      current.push(fenceEnd);
+      chunks.push(current.join('\n'));
+      // start new chunk with header again
+      current = [headerFenceStart, headerLine, sepLine, row];
+    } else {
+      current.push(row);
     }
-
-    const total =
-      typeof st.totalPlayers === 'number'
-        ? st.totalPlayers
-        : (st.alliesPlayers || 0) + (st.axisPlayers || 0);
-
-    const mapScore = `${st.currentMap}  ${st.alliesScore ?? 0}–${st.axisScore ?? 0} (${formatSeconds(st.timeRemainingSeconds)})`;
-    const avs = `${st.alliesPlayers ?? 0} vs ${st.axisPlayers ?? 0}`;
-    const serverName = `${st.name}${st.shortName ? ` (${st.shortName})` : ''}`;
-    // angle brackets to force proper autolink in Discord, and so long URLs don’t break the grid visually
-    const link = st.statsUrl ? `<${st.statsUrl}>` : '-';
-
-    return [
-      pad(serverName, COLS[0][1]),
-      pad(mapScore, COLS[1][1]),
-      pad(total, COLS[2][1]),
-      pad(avs, COLS[3][1]),
-      pad(st.nextMap || 'Unknown', COLS[4][1]),
-      pad(link, COLS[5][1]),
-      pad(nowSydney(), COLS[6][1]),
-    ].join(' | ');
-  });
-
-  // Wrap in a code block so Discord preserves fixed-width alignment.
-  const table = ['```', header, sep, ...rows, '```'].join('\n');
-
-  // If we only had offline rows AND no successes, keep the table anyway—it’s clearer.
-  return table;
+  }
+  // flush last
+  if (current.length) {
+    current.push(fenceEnd);
+    chunks.push(current.join('\n'));
+  }
+  return chunks;
 }
-
 
 module.exports = {
   loadServersConfig,
   fetchServerStatuses,
   buildDiscordMessage,
+  buildDiscordMessages,  
   formatSeconds,
 };
