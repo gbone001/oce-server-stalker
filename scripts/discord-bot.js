@@ -111,15 +111,29 @@ client.on(Events.InteractionCreate, async (interaction) => {
   }
 
   if (interaction.commandName === 'stalknow') {
-    const triggered = await postScoreboard('slash');
-    if (triggered) {
-      await interaction.reply({ content: 'Refreshing the scoreboard now.', ephemeral: true });
-    } else {
+    if (inFlight) {
       await interaction.reply({
         content: 'A scoreboard update is already running. Try again shortly.',
         ephemeral: true,
       });
+      return;
     }
+
+    await interaction.deferReply({ ephemeral: true });
+    try {
+      const triggered = await postScoreboard('slash');
+      if (triggered) {
+        await interaction.editReply({ content: 'Refreshing the scoreboard now.' });
+      } else {
+        await interaction.editReply({
+          content: 'Unable to post right now; please try again shortly.',
+        });
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      await interaction.editReply({ content: `Failed to refresh the scoreboard: ${message}` });
+    }
+    return;
   }
 });
 
