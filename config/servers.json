@@ -2,301 +2,361 @@
   {
     "name": "1ST Baddies",
     "url": "https://server2stats.1stid-hll.cc/api/get_public_info",
-    "statsUrl": "https://server2stats.1stid-hll.cc/games/6960"
+    "statsUrl": "https://server2stats.1stid-hll.cc/games/6960",
+    "hidden": true
   },
   {
     "name": "2/6",
     "url": "https://server3stats.1stid-hll.cc/api/get_public_info",
-    "statsUrl": "https://server3stats.1stid-hll.cc/games/7076"
+    "statsUrl": "https://server3stats.1stid-hll.cc/games/7076",
+    "hidden": true
   },
   {
     "name": "3/5",
     "url": "https://spartans-stats.hlladmin.com/api/get_public_info",
-    "statsUrl": "https://spartans-stats.hlladmin.com/games"
+    "statsUrl": "https://spartans-stats.hlladmin.com/games",
+    "hidden": true
   },
   {
     "name": "3/5 West",
     "url": "https://3-5west-stats.crcon.cc/api/get_public_info",
-    "statsUrl": "https://3-5west-stats.crcon.cc/#/gamescoreboard/61"
+    "statsUrl": "https://3-5west-stats.crcon.cc/#/gamescoreboard/61",
+    "hidden": true
   },
   {
     "name": "11ID",
     "url": "https://11id-stats.hlladmin.com/api/get_public_info",
-    "statsUrl": "https://11id-stats.hlladmin.com/"
+    "statsUrl": "https://11id-stats.hlladmin.com/",
+    "hidden": true
   },
   {
     "name": "11th Hellcats Public",
     "url": "http://145.223.22.23:7010/api/get_public_info",
-    "statsUrl": "https://server-stats.anzr.org/servers/11th-hellcats-public"
+    "statsUrl": "https://server-stats.anzr.org/servers/11th-hellcats-public",
+    "hidden": true
   },
   {
     "name": "22ND/4ID Event",
     "url": "https://22nd4iduse-stats.hlladmin.com/api/get_public_info",
-    "statsUrl": "https://22nd4iduse-stats.hlladmin.com/games/4928"
+    "statsUrl": "https://22nd4iduse-stats.hlladmin.com/games/4928",
+    "hidden": true
   },
   {
     "name": "22ND/4ID Pub Lobby",
     "url": "https://22nd4id-stats.hlladmin.com/api/get_public_info",
-    "statsUrl": "https://22nd4id-stats.hlladmin.com/"
+    "statsUrl": "https://22nd4id-stats.hlladmin.com/",
+    "hidden": true
   },
   {
     "name": "34TH",
     "url": "http://89.117.148.1:7010/api/get_public_info",
-    "statsUrl": "http://89.117.148.1:7010/#/"
+    "statsUrl": "http://89.117.148.1:7010/#/",
+    "hidden": true
   },
   {
     "name": "3-5 East Spartans",
     "url": "https://spartans-stats.hlladmin.com/api/get_public_info",
-    "statsUrl": "https://spartans-stats.hlladmin.com/games"
+    "statsUrl": "https://spartans-stats.hlladmin.com/games",
+    "hidden": true
   },
   {
     "name": "6TH",
     "url": "http://54.215.33.246:8010/api/get_public_info",
-    "statsUrl": "http://54.215.33.246:8010/#/gamescoreboard/1129"
+    "statsUrl": "http://54.215.33.246:8010/#/gamescoreboard/1129",
+    "hidden": true
   },
   {
     "name": "6TH West",
     "url": "http://103.193.80.117:7010/api/get_public_info",
-    "statsUrl": "http://103.193.80.117:7010/games/73"
+    "statsUrl": "http://103.193.80.117:7010/games/73",
+    "hidden": true
   },
   {
     "name": "626",
     "url": "https://626gaming-stats.hlladmin.com/api/get_public_info",
-    "statsUrl": "https://626gaming-stats.hlladmin.com/"
+    "statsUrl": "https://626gaming-stats.hlladmin.com/",
+    "hidden": true
   },
   {
     "name": "79th ID Comp",
     "url": "https://79thid-stats.crcon.cc/api/get_public_info",
-    "statsUrl": "https://79thid-stats.crcon.cc/games"
+    "statsUrl": "https://79thid-stats.crcon.cc/games",
+    "hidden": true
   },
   {
     "name": "79th ID Public",
     "url": "https://79thbravocompany-stats.hlladmin.com/api/get_public_info",
-    "statsUrl": "https://79thbravocompany-stats.hlladmin.com/games"
+    "statsUrl": "https://79thbravocompany-stats.hlladmin.com/games",
+    "hidden": true
   },
   {
     "name": "9PZ",
     "url": "https://9pz-stats.crcon.cc/api/get_public_info",
-    "statsUrl": "https://9pz-stats.crcon.cc/"
+    "statsUrl": "https://9pz-stats.crcon.cc/",
+    "hidden": true
   },
   {
     "name": "ANZR Warfare 24/7",
     "url": "http://148.113.196.189:7010/api/get_public_info",
-    "statsUrl": "https://server-stats.anzr.org/"
+    "statsUrl": "https://server-stats.anzr.org/",
+    "hidden": false
   },
   {
     "name": "BCR",
     "url": "http://144.202.43.169:7010/api/get_public_info",
-    "statsUrl": "http://144.202.43.169:7010/"
+    "statsUrl": "http://144.202.43.169:7010/",
+    "hidden": true
   },
   {
     "name": "CMG",
     "url": "https://cmg-stats.hlladmin.com/api/get_public_info",
-    "statsUrl": "https://cmg-stats.hlladmin.com/"
+    "statsUrl": "https://cmg-stats.hlladmin.com/",
+    "hidden": true
   },
   {
     "name": "DAWG",
     "url": "https://dawgdivision-stats.hlladmin.com/api/get_public_info",
-    "statsUrl": "https://dawgdivision-stats.hlladmin.com/"
+    "statsUrl": "https://dawgdivision-stats.hlladmin.com/",
+    "hidden": true
   },
   {
     "name": "DBD",
     "url": "https://dbdhll-stats.hlladmin.com/api/get_public_info",
-    "statsUrl": "https://dbdhll-stats.hlladmin.com/"
+    "statsUrl": "https://dbdhll-stats.hlladmin.com/",
+    "hidden": true
   },
   {
     "name": "EXODUS Event",
     "url": "https://exodusevent.hlladmin.com/api/get_public_info",
-    "statsUrl": "https://exodusevent.hlladmin.com/"
+    "statsUrl": "https://exodusevent.hlladmin.com/",
+    "hidden": true
   },
   {
     "name": "EXODUS Public",
     "url": "https://exoduspub-stats.hlladmin.com/api/get_public_info",
-    "statsUrl": "https://exoduspub-stats.hlladmin.com/"
+    "statsUrl": "https://exoduspub-stats.hlladmin.com/",
+    "hidden": true
   },
   {
     "name": "GOAT",
     "url": "https://goat-stats.hlladmin.com/api/get_public_info",
-    "statsUrl": "https://goat-stats.hlladmin.com/"
+    "statsUrl": "https://goat-stats.hlladmin.com/",
+    "hidden": true
   },
   {
     "name": "HLLE",
     "url": "http://158.220.86.134:7010/api/get_public_info",
-    "statsUrl": "http://158.220.86.134:7010/"
+    "statsUrl": "http://158.220.86.134:7010/",
+    "hidden": true
   },
   {
     "name": "KRRC Comp",
     "url": "https://events.krrc.online/api/get_public_info",
-    "statsUrl": "https://events.krrc.online/"
+    "statsUrl": "https://events.krrc.online/",
+    "hidden": true
   },
   {
     "name": "KRRC Public",
     "url": "https://stats.krrc.online/api/get_public_info",
-    "statsUrl": "https://stats.krrc.online/"
+    "statsUrl": "https://stats.krrc.online/",
+    "hidden": true
   },
   {
     "name": "LGN",
     "url": "http://84.247.188.205:7010/api/get_public_info",
-    "statsUrl": "http://84.247.188.205:7010/"
+    "statsUrl": "http://84.247.188.205:7010/",
+    "hidden": true
   },
   {
     "name": "LGN Japan",
     "url": "http://198.23.197.194:7012/api/get_public_info",
-    "statsUrl": "http://198.23.197.194:7012/"
+    "statsUrl": "http://198.23.197.194:7012/",
+    "hidden": true
   },
   {
     "name": "MERC",
     "url": "http://158.220.123.16:7010/api/get_public_info",
-    "statsUrl": "http://158.220.123.16:7010/"
+    "statsUrl": "http://158.220.123.16:7010/",
+    "hidden": true
   },
   {
     "name": "MERC Events",
     "url": "http://158.220.123.16:7012/api/get_public_info",
-    "statsUrl": "http://158.220.123.16:7012/"
+    "statsUrl": "http://158.220.123.16:7012/",
+    "hidden": true
   },
   {
     "name": "MSFT",
     "url": "https://misfits-stats.hlladmin.com/api/get_public_info",
-    "statsUrl": "https://misfits-stats.hlladmin.com/"
+    "statsUrl": "https://misfits-stats.hlladmin.com/",
+    "hidden": true
   },
   {
     "name": "MSU Public Warfare",
     "url": "http://147.93.104.243:7010/api/get_public_info",
-    "statsUrl": "https://server-stats.anzr.org/servers/msu-public-warefare"
+    "statsUrl": "https://server-stats.anzr.org/servers/msu-public-warefare",
+    "hidden": true
   },
   {
     "name": "PF",
     "url": "https://pathfinders-stats.hlladmin.com/api/get_public_info",
-    "statsUrl": "https://pathfinders-stats.hlladmin.com/"
+    "statsUrl": "https://pathfinders-stats.hlladmin.com/",
+    "hidden": true
   },
   {
     "name": "PF US West",
     "url": "https://pfprivate-stats.hlladmin.com/api/get_public_info",
-    "statsUrl": "https://pfprivate-stats.hlladmin.com/games/4735"
+    "statsUrl": "https://pfprivate-stats.hlladmin.com/games/4735",
+    "hidden": true
   },
   {
     "name": "PF2",
     "url": "https://pfqonzer-stats.hlladmin.com/api/get_public_info",
-    "statsUrl": "https://pfqonzer-stats.hlladmin.com/"
+    "statsUrl": "https://pfqonzer-stats.hlladmin.com/",
+    "hidden": true
   },
   {
     "name": "R22R",
     "url": "https://r22r-stats.hlladmin.com/api/get_public_info",
-    "statsUrl": "https://r22r-stats.hlladmin.com/"
+    "statsUrl": "https://r22r-stats.hlladmin.com/",
+    "hidden": true
   },
   {
     "name": "Rage",
     "url": "https://rage-stats.hlladmin.com/api/get_public_info",
-    "statsUrl": "https://rage-stats.hlladmin.com/"
+    "statsUrl": "https://rage-stats.hlladmin.com/",
+    "hidden": true
   },
   {
     "name": "RDG",
     "url": "http://stats.rdg-clan.co.uk:7010/api/get_public_info",
-    "statsUrl": "http://stats.rdg-clan.co.uk:7010/games/484"
+    "statsUrl": "http://stats.rdg-clan.co.uk:7010/games/484",
+    "hidden": true
   },
   {
     "name": "ROFS EU",
     "url": "http://109.123.227.143:7012/api/get_public_info",
-    "statsUrl": "http://109.123.227.143:7012/"
+    "statsUrl": "http://109.123.227.143:7012/",
+    "hidden": true
   },
   {
     "name": "ROFS US",
     "url": "https://stats.rofs.info/us/api/get_public_info",
-    "statsUrl": "https://stats.rofs.info/us/#/gamescoreboard/687"
+    "statsUrl": "https://stats.rofs.info/us/#/gamescoreboard/687",
+    "hidden": true
   },
   {
     "name": "RZN / REDZONE",
     "url": "https://rzn-stats.crcon.cc/api/get_public_info",
-    "statsUrl": "https://rzn-stats.crcon.cc/#/gamescoreboard/103"
+    "statsUrl": "https://rzn-stats.crcon.cc/#/gamescoreboard/103",
+    "hidden": true
   },
   {
     "name": "SAP",
     "url": "https://sentaapua-stats.hlladmin.com/api/get_public_info",
-    "statsUrl": "https://sentaapua-stats.hlladmin.com/games/547"
+    "statsUrl": "https://sentaapua-stats.hlladmin.com/games/547",
+    "hidden": true
   },
   {
     "name": "SAS",
     "url": "https://sas-stats.hlladmin.com/api/get_public_info",
-    "statsUrl": "https://sas-stats.hlladmin.com/games/865"
+    "statsUrl": "https://sas-stats.hlladmin.com/games/865",
+    "hidden": true
   },
   {
     "name": "SCC Public",
     "url": "http://154.26.158.99:7010/api/get_public_info",
-    "statsUrl": "https://server-stats.anzr.org/servers/scc-public"
+    "statsUrl": "https://server-stats.anzr.org/servers/scc-public",
+    "hidden": true
   },
   {
     "name": "SPAM",
     "url": "https://nomads.hlladmin.com/api/get_public_info",
-    "statsUrl": "https://nomads.hlladmin.com/#/livescore"
+    "statsUrl": "https://nomads.hlladmin.com/#/livescore",
+    "hidden": true
   },
   {
     "name": "TFMC",
     "url": "http://31.220.108.75:7012/api/get_public_info",
-    "statsUrl": "http://31.220.108.75:7012/"
+    "statsUrl": "http://31.220.108.75:7012/",
+    "hidden": true
   },
   {
     "name": "TRR",
     "url": "https://therogueregiment-stats.hlladmin.com/api/get_public_info",
-    "statsUrl": "https://therogueregiment-stats.hlladmin.com/"
+    "statsUrl": "https://therogueregiment-stats.hlladmin.com/",
+    "hidden": true
   },
   {
     "name": "TPL Brazil #1 (SAO)",
     "url": "http://tpl2.thepremierleagueofhll.ca:5015/api/get_public_info",
-    "statsUrl": "http://tpl2.thepremierleagueofhll.ca:5015/"
+    "statsUrl": "http://tpl2.thepremierleagueofhll.ca:5015/",
+    "hidden": true
   },
   {
     "name": "TPL EU West #1 (LDN)",
     "url": "http://tpl1.thepremierleagueofhll.ca:7016/api/get_public_info",
-    "statsUrl": "http://tpl1.thepremierleagueofhll.ca:7016/"
+    "statsUrl": "http://tpl1.thepremierleagueofhll.ca:7016/",
+    "hidden": true
   },
   {
     "name": "TPL EU West #2 (FRF)",
     "url": "http://tpl2.thepremierleagueofhll.ca:4016/api/get_public_info",
-    "statsUrl": "http://tpl2.thepremierleagueofhll.ca:4016/"
+    "statsUrl": "http://tpl2.thepremierleagueofhll.ca:4016/",
+    "hidden": true
   },
   {
     "name": "TPL EU West #3 (PAR)",
     "url": "http://tpl2.thepremierleagueofhll.ca:4012/api/get_public_info",
-    "statsUrl": "http://tpl2.thepremierleagueofhll.ca:4012/"
+    "statsUrl": "http://tpl2.thepremierleagueofhll.ca:4012/",
+    "hidden": true
   },
   {
     "name": "TPL Japan #1 (TYO)",
     "url": "http://tpl1.thepremierleagueofhll.ca:7018/api/get_public_info",
-    "statsUrl": "http://tpl1.thepremierleagueofhll.ca:7018/"
+    "statsUrl": "http://tpl1.thepremierleagueofhll.ca:7018/",
+    "hidden": true
   },
   {
     "name": "TPL Japan #2 (TYO)",
     "url": "http://tpl2.thepremierleagueofhll.ca:4018/api/get_public_info",
-    "statsUrl": "http://tpl2.thepremierleagueofhll.ca:4018/"
+    "statsUrl": "http://tpl2.thepremierleagueofhll.ca:4018/",
+    "hidden": true
   },
   {
     "name": "TPL US East #1 (NY)",
     "url": "http://tpl1.thepremierleagueofhll.ca:7010/api/get_public_info",
-    "statsUrl": "http://tpl1.thepremierleagueofhll.ca:7010/"
+    "statsUrl": "http://tpl1.thepremierleagueofhll.ca:7010/",
+    "hidden": true
   },
   {
     "name": "TPL US East #2 (NY)",
     "url": "http://tpl2.thepremierleagueofhll.ca:4010/api/get_public_info",
-    "statsUrl": "http://tpl2.thepremierleagueofhll.ca:4010/"
+    "statsUrl": "http://tpl2.thepremierleagueofhll.ca:4010/",
+    "hidden": true
   },
   {
     "name": "TPL US East #3 (MIA)",
     "url": "http://tpl1.thepremierleagueofhll.ca:7012/api/get_public_info",
-    "statsUrl": "http://tpl1.thepremierleagueofhll.ca:7012/"
+    "statsUrl": "http://tpl1.thepremierleagueofhll.ca:7012/",
+    "hidden": true
   },
   {
     "name": "TPL US West #1 (LA)",
     "url": "http://tpl2.thepremierleagueofhll.ca:4014/api/get_public_info",
-    "statsUrl": "http://tpl2.thepremierleagueofhll.ca:4014/"
+    "statsUrl": "http://tpl2.thepremierleagueofhll.ca:4014/",
+    "hidden": true
   },
   {
     "name": "TPL US West #2 (LA)",
     "url": "http://tpl1.thepremierleagueofhll.ca:7014/api/get_public_info",
-    "statsUrl": "http://tpl1.thepremierleagueofhll.ca:7014/"
+    "statsUrl": "http://tpl1.thepremierleagueofhll.ca:7014/",
+    "hidden": true
   },
   {
     "name": "WRTB",
     "url": "https://comp-stats.wrtb.eu/api/get_public_info",
-    "statsUrl": "https://comp-stats.wrtb.eu/games/3420"
+    "statsUrl": "https://comp-stats.wrtb.eu/games/3420",
+    "hidden": true
   }
 ]

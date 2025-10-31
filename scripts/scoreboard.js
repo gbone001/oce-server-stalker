@@ -65,7 +65,8 @@ async function loadServersConfig() {
   }
 
   if (Array.isArray(data)) {
-    return data.map((entry, index) => normalizeArrayEntry(entry, index, label));
+    const list = data.map((entry, index) => normalizeArrayEntry(entry, index, label));
+    return list.filter((s) => !s.hidden);
   }
 
   if (!data || typeof data !== 'object') {
@@ -76,7 +77,8 @@ async function loadServersConfig() {
     throw new Error(`${label}: object format requires a "servers" array`);
   }
 
-  return data.servers.map((entry, index) => normalizeObjectEntry(entry, index, label));
+  const mapped = data.servers.map((entry, index) => normalizeObjectEntry(entry, index, label));
+  return mapped.filter((s) => !s.hidden);
 }
 
 function normalizeArrayEntry(entry, index, label) {
@@ -102,6 +104,7 @@ function normalizeArrayEntry(entry, index, label) {
     apiUrl: url,
     hostHeader,
     statsUrl,
+    hidden: entry && typeof entry.hidden === 'boolean' ? Boolean(entry.hidden) : false,
   };
 }
 
@@ -131,6 +134,7 @@ function normalizeObjectEntry(entry, index, label) {
     apiUrl: apiUrl.trim(),
     hostHeader: hostOverride,
     statsUrl: typeof statsUrl === 'string' && statsUrl.trim().length > 0 ? statsUrl.trim() : undefined,
+    hidden: typeof entry.hidden === 'boolean' ? Boolean(entry.hidden) : false,
   };
 }
 
@@ -321,20 +325,38 @@ function buildDiscordMessage(statuses) {
   // Server - Current Map Match Score - Total Players - Allies vs Axis - Next Map - Detailed Stats Link - Last Updated
   const headers = [
     'Server',
-    'Current Map Match Score',
-    'Total Players',
-    'Allies vs Axis',
-    'Next Map',
-    'Detailed Stats Link',
-    'Last Updated',
+    'Map/Score',
+    'Tot',
+    'A/A',
+    'Next',
+    'Stats',
+    'Updated',
   ];
+
+  const truncate = (val, max) => {
+    const s = typeof val === 'string' ? val : String(val ?? '');
+    if (s.length <= max) return s;
+    if (max <= 1) return s.slice(0, max);
+    return s.slice(0, Math.max(0, max - 1)) + '…';
+  };
+
+  const shortStats = (url) => {
+    try {
+      const u = new URL(url);
+      return `${u.protocol}//${u.hostname}`; // clickable, compact
+    } catch {
+      return safeUrl(url);
+    }
+  };
   const rows = statuses.map((status) => {
-    const serverName = status.name ? String(status.name) : 'Unknown';
-    const withShort = status.shortName ? `${serverName} (${status.shortName})` : serverName;
+  const serverName = status.name ? String(status.name) : 'Unknown';
+  const preferredName = status.shortName ? String(status.shortName) : serverName;
+  const withShort = truncate(preferredName, 26);
 
     const isOk = status.status === 'success';
-    const currentMap = isOk ? (status.currentMap || 'Unknown') : (status.error || 'Offline');
-    const matchScore = isOk ? `${status.alliesScore ?? 0}-${status.axisScore ?? 0}` : 'ERR';
+  const currentMap = isOk ? (status.currentMap || 'Unknown') : (status.error || 'Offline');
+  const matchScore = isOk ? `${status.alliesScore ?? 0}-${status.axisScore ?? 0}` : 'ERR';
+  const mapScore = truncate(`${currentMap} ${matchScore}`, 22);
     const total = isOk
       ? (typeof status.totalPlayers === 'number'
           ? status.totalPlayers
@@ -343,13 +365,13 @@ function buildDiscordMessage(statuses) {
     const alliesVsAxis = isOk
       ? `${status.alliesPlayers ?? 0}-${status.axisPlayers ?? 0}`
       : '0-0';
-    const nextMap = isOk ? (status.nextMap || 'Unknown') : '';
-    const statsLink = safeUrl(status.statsUrl);
+    const nextMap = truncate(isOk ? (status.nextMap || 'Unknown') : '', 16);
+    const statsLink = shortStats(status.statsUrl);
   const updated = formatRelativeFromIso(status.fetchedAt);
 
     return [
       withShort,
-      `${currentMap} ${matchScore}`,
+      mapScore,
       String(total),
       alliesVsAxis,
       nextMap,
