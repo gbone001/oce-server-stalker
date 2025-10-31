@@ -33,7 +33,7 @@
     "name": "11th Hellcats Public",
     "url": "http://145.223.22.23:7010/api/get_public_info",
     "statsUrl": "https://server-stats.anzr.org/servers/11th-hellcats-public",
-    "hidden": true
+    "hidden": false
   },
   {
     "name": "22ND/4ID Event",
@@ -195,7 +195,7 @@
     "name": "MSU Public Warfare",
     "url": "http://147.93.104.243:7010/api/get_public_info",
     "statsUrl": "https://server-stats.anzr.org/servers/msu-public-warefare",
-    "hidden": true
+    "hidden": false
   },
   {
     "name": "PF",
@@ -267,7 +267,7 @@
     "name": "SCC Public",
     "url": "http://154.26.158.99:7010/api/get_public_info",
     "statsUrl": "https://server-stats.anzr.org/servers/scc-public",
-    "hidden": true
+    "hidden": false
   },
   {
     "name": "SPAM",
@@ -279,7 +279,7 @@
     "name": "TFMC",
     "url": "http://31.220.108.75:7012/api/get_public_info",
     "statsUrl": "http://31.220.108.75:7012/",
-    "hidden": true
+    "hidden": false
   },
   {
     "name": "TRR",
