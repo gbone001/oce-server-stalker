@@ -15,12 +15,9 @@
 const path = require('path');
 require('dotenv').config({ path: path.resolve(__dirname, '..', '.env') });
 const { Client, GatewayIntentBits, Partials, Events, SlashCommandBuilder } = require('discord.js');
-//const { fetchServerStatuses, buildDiscordMessage } = require('./scoreboard');
-// top: import the new function
 const {
   fetchServerStatuses,
-  buildDiscordMessage,
-  buildDiscordMessages, // <— new
+  buildDiscordMessages,
 } = require('./scoreboard');
 
 const BOT_TOKEN = process.env.DISCORD_BOT_TOKEN;
@@ -139,37 +136,26 @@ async function sendMessagesSequentially(channel, messages, roleId) {
 
 
 async function postScoreboard(trigger) {
-// inside postScoreboard(...)
-const statuses = await fetchServerStatuses();
-// old single string (kept for fallback):
-// let content = buildDiscordMessage(statuses);
-
-// new: chunk-aware
-const messages = buildDiscordMessages(statuses, 1800);
-
-// old role + length trim + single send -> replace with:
-await sendMessagesSequentially(channelRef, messages, ROLE_ID);
-
-console.log(`Scoreboard posted successfully (${messages.length} message${messages.length === 1 ? '' : 's'}).`);
-
-  if (!channelRef) return false;
+  if (!channelRef) {
+    console.warn('Skipping scoreboard post because the channel reference is not ready.');
+    return false;
+  }
   if (inFlight) {
     console.warn('Skipped scoreboard post because a previous run is still in progress.');
     return false;
   }
   inFlight = true;
   console.log(`[${new Date().toISOString()}] Running scoreboard update (trigger: ${trigger})`);
+
+  let success = false;
   try {
     const statuses = await fetchServerStatuses();
-    let content = buildDiscordMessage(statuses);
-    if (ROLE_ID) {
-      content = `<@&${ROLE_ID}>\n\n${content}`;
-    }
-//    if (content.length > 1900) {
-//      content = `${content.slice(0, 1897)}...`;
-//    }
-    await channelRef.send({ content });
-    console.log('Scoreboard posted successfully.');
+    const messages = buildDiscordMessages(statuses, 1800);
+    await sendMessagesSequentially(channelRef, messages, ROLE_ID);
+    console.log(
+      `Scoreboard posted successfully (${messages.length} message${messages.length === 1 ? '' : 's'}).`
+    );
+    success = true;
   } catch (err) {
     console.error('Failed to post scoreboard:', err);
     try {
@@ -182,7 +168,8 @@ console.log(`Scoreboard posted successfully (${messages.length} message${message
   } finally {
     inFlight = false;
   }
-  return true;
+
+  return success;
 }
 
 function schedulePosting(minutes) {
