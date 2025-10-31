@@ -329,7 +329,8 @@ function buildDiscordMessage(statuses) {
   // Server - Current Map Match Score - Total Players - Allies vs Axis - Next Map - Detailed Stats Link - Last Updated
   const headers = [
     'Server',
-    'Map/Score',
+    'Map',
+    'Score',
     'Tot',
     'A/A',
     'Next',
@@ -354,6 +355,24 @@ function buildDiscordMessage(statuses) {
       return safeUrl(url);
     }
   };
+
+  const titleCase = (s) => s.replace(/\b([a-z])/g, (m, c) => c.toUpperCase());
+  const toMapShortName = (value) => {
+    if (typeof value !== 'string' || !value.trim()) return 'Unknown';
+    let s = value.trim();
+    // If looks like id form e.g. omaha_beach_warfare
+    if (/[_]/.test(s)) {
+      s = s.replace(/_(warfare|offensive|skirmish)$/i, '');
+      s = s.replace(/_/g, ' ');
+      s = titleCase(s);
+      return s;
+    }
+    // Strip trailing mode words
+    s = s.replace(/\s+(Warfare|Offensive|Skirmish)\s*$/i, '');
+    // Normalize unknown strings, including 'unknown warfare'
+    if (/^unknown(\s+warfare)?\b/i.test(s)) return 'Unknown';
+    return s;
+  };
   const rows = statuses.map((status) => {
   const serverName = status.name ? String(status.name) : 'Unknown';
   const preferredName = status.shortName ? String(status.shortName) : serverName;
@@ -362,7 +381,7 @@ function buildDiscordMessage(statuses) {
     const isOk = status.status === 'success';
   const currentMap = isOk ? (status.currentMap || 'Unknown') : (status.error || 'Offline');
   const matchScore = isOk ? `${status.alliesScore ?? 0}-${status.axisScore ?? 0}` : 'ERR';
-  const mapScore = truncate(`${currentMap} ${matchScore}`, 22);
+  const mapShort = truncate(toMapShortName(currentMap), 18);
     const total = isOk
       ? (typeof status.totalPlayers === 'number'
           ? status.totalPlayers
@@ -371,12 +390,13 @@ function buildDiscordMessage(statuses) {
     const alliesVsAxis = isOk
       ? `${status.alliesPlayers ?? 0}-${status.axisPlayers ?? 0}`
       : '0-0';
-    const nextMap = truncate(isOk ? (status.nextMap || 'Unknown') : '', 16);
+  const nextMap = truncate(isOk ? toMapShortName(status.nextMap || 'Unknown') : 'Unknown', 16);
   const updated = formatRelativeFromIso(status.fetchedAt);
 
     return [
       withShort,
-      mapScore,
+      mapShort,
+      matchScore,
       String(total),
       alliesVsAxis,
       nextMap,
