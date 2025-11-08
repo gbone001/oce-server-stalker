@@ -102,9 +102,9 @@
     "hidden": false
   },
   {
-    "name": "US - ANZR Warfare 24/7",
-    "url": "https://anzrus.hlladmin.com/api/get_public_info",
-    "statsUrl": "https://anzrus-stats.hlladmin.com/",
+    "name": "USA - ANZR Warfare 24/7",
+    "url": "https://anzrusa.hlladmin.com/api/get_public_info",
+    "statsUrl": "https://anzrusa-stats.hlladmin.com/",
     "hidden": false
   },
   {
