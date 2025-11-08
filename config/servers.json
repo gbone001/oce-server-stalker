@@ -96,9 +96,15 @@
     "hidden": true
   },
   {
-    "name": "ANZR Warfare 24/7",
-    "url": "http://148.113.196.189:7010/api/get_public_info",
-    "statsUrl": "https://server-stats.anzr.org/",
+    "name": "AUS - ANZR Warfare 24/7",
+    "url": "https://anzrau.hlladmin.com/api/get_public_info",
+    "statsUrl": "https://anzrau-stats.hlladmin.com/",
+    "hidden": false
+  },
+  {
+    "name": "US - ANZR Warfare 24/7",
+    "url": "https://anzrus.hlladmin.com/api/get_public_info",
+    "statsUrl": "https://anzrus-stats.hlladmin.com/",
     "hidden": false
   },
   {
