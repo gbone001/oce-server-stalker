@@ -54,6 +54,7 @@ let lastMessageIds = [];
 let postingIntervalMinutes = DEFAULT_INTERVAL_MINUTES;
 let intervalHandle = null;
 let inFlight = false;
+const SCOREBOARD_HEADER_TOKEN = 'Server';
 
 const slashCommands = [
   new SlashCommandBuilder()
@@ -90,6 +91,18 @@ client.once(Events.ClientReady, async (readyClient) => {
   } catch (err) {
     console.error('Failed to fetch posting channel:', err);
     process.exit(1);
+  }
+
+  try {
+    lastMessageIds = await recoverLastScoreboardMessageIds(channelRef, readyClient.user.id);
+    if (lastMessageIds.length > 0) {
+      console.log(`Recovered ${lastMessageIds.length} previous scoreboard message(s) for editing.`);
+    } else {
+      console.log('No previous scoreboard messages found; next update will post a new message.');
+    }
+  } catch (err) {
+    console.warn('Unable to recover prior scoreboard messages:', err);
+    lastMessageIds = [];
   }
 
   await postScoreboard('startup');
@@ -185,6 +198,38 @@ async function upsertMessages(channel, messages, roleId) {
   }
 
   return ids;
+}
+
+function isScoreboardMessageContent(content) {
+  if (typeof content !== 'string') return false;
+  const text = content.trim();
+  if (!text.includes('```')) return false;
+  return text.includes(SCOREBOARD_HEADER_TOKEN) && text.includes('| Updated');
+}
+
+async function recoverLastScoreboardMessageIds(channel, botUserId) {
+  const recent = await channel.messages.fetch({ limit: 100 });
+  const history = Array.from(recent.values()).sort((a, b) => b.createdTimestamp - a.createdTimestamp);
+
+  const recovered = [];
+  let started = false;
+
+  for (const msg of history) {
+    const isBot = msg.author?.id === botUserId;
+    const isScoreboard = isBot && isScoreboardMessageContent(msg.content);
+
+    if (!started) {
+      if (!isScoreboard) continue;
+      started = true;
+      recovered.push(msg.id);
+      continue;
+    }
+
+    if (!isScoreboard) break;
+    recovered.push(msg.id);
+  }
+
+  return recovered.reverse();
 }
 
 
