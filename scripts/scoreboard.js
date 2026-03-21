@@ -336,8 +336,8 @@ function buildDiscordMessage(statuses) {
     'Server',
     'Map',
     'Score',
-    'Tot',
-    'A/A',
+    'Players',
+    'Allies/Axis',
     'Next',
     'Updated',
   ];
