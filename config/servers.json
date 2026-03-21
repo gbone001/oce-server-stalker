@@ -8,7 +8,7 @@
   {
     "name": "6TH OCE",
     "url": "https://6th-australia-stats.radicalgamingstats.com/api/get_public_info",
-    "hidden": true,
+    "hidden": false,
     "non-issue": "no"
   },
   {
@@ -92,6 +92,7 @@
   },
   {
     "name": "TFMC Public",
+    "alias": "TFMC",
     "url": "http://31.220.108.75:7010/api/get_public_info",
     "hidden": false,
     "non-issue": "no"

@@ -95,6 +95,7 @@ function normalizeArrayEntry(entry, index, label) {
       : typeof entry.hostHeader === 'string'
         ? entry.hostHeader.trim()
         : undefined;
+  const alias = typeof entry.alias === 'string' && entry.alias.trim().length > 0 ? entry.alias.trim() : undefined;
   if (!name || !url) {
     throw new Error(`${label}[${index}] requires non-empty "name" and "url" fields`);
   }
@@ -103,6 +104,7 @@ function normalizeArrayEntry(entry, index, label) {
     name,
     apiUrl: url,
     hostHeader,
+    alias,
     statsUrl,
     hidden: entry && typeof entry.hidden === 'boolean' ? Boolean(entry.hidden) : false,
   };
@@ -112,7 +114,7 @@ function normalizeObjectEntry(entry, index, label) {
   if (!entry || typeof entry !== 'object') {
     throw new Error(`${label}.servers[${index}] must be an object`);
   }
-  const { id, name, apiUrl, hostHeader, host, statsUrl } = entry;
+  const { id, name, apiUrl, hostHeader, host, statsUrl, alias } = entry;
   if (typeof id !== 'string' || !id.trim()) {
     throw new Error(`${label}.servers[${index}].id must be a non-empty string`);
   }
@@ -133,6 +135,7 @@ function normalizeObjectEntry(entry, index, label) {
     name: name.trim(),
     apiUrl: apiUrl.trim(),
     hostHeader: hostOverride,
+    alias: typeof alias === 'string' && alias.trim().length > 0 ? alias.trim() : undefined,
     statsUrl: typeof statsUrl === 'string' && statsUrl.trim().length > 0 ? statsUrl.trim() : undefined,
     hidden: typeof entry.hidden === 'boolean' ? Boolean(entry.hidden) : false,
   };
@@ -181,6 +184,7 @@ async function fetchServerStatus(server) {
     return {
       ...mapApiResponse(payload, server),
       status: 'success',
+      alias: server.alias,
       statsUrl: server.statsUrl,
       serverUrlBase,
       fetchedAt: new Date().toISOString(),
@@ -191,6 +195,7 @@ async function fetchServerStatus(server) {
       name: server.name,
       status: 'error',
       error: err instanceof Error ? err.message : String(err),
+      alias: server.alias,
       statsUrl: server.statsUrl,
       serverUrlBase: (() => { try { return new URL(server.apiUrl).origin; } catch { return undefined; } })(),
       fetchedAt: new Date().toISOString(),
@@ -375,7 +380,11 @@ function buildDiscordMessage(statuses) {
   };
   const rows = statuses.map((status) => {
   const serverName = status.name ? String(status.name) : 'Unknown';
-  const preferredName = status.shortName ? String(status.shortName) : serverName;
+  const preferredName = status.alias
+    ? String(status.alias)
+    : status.shortName
+      ? String(status.shortName)
+      : serverName;
   const withShort = truncate(preferredName, 26);
 
     const isOk = status.status === 'success';
