@@ -325,157 +325,143 @@ function safeUrl(value) {
   return value.trim();
 }
 
-function buildDiscordMessage(statuses) {
-  if (!Array.isArray(statuses) || statuses.length === 0) {
-    return 'No servers configured.';
-  }
+const SCOREBOARD_TITLE = 'OCE Server Stalker';
 
-  // Requested columns:
-  // Server - Current Map Match Score - Total Players - Allies vs Axis - Next Map - Detailed Stats Link - Last Updated
-  const headers = [
-    'Server',
-    'Map',
-    'Score',
-    'Players',
-    'Allies/Axis',
-    'Next',
-    'Updated',
-  ];
-
-  const truncate = (val, max) => {
-    const s = typeof val === 'string' ? val : String(val ?? '');
-    if (s.length <= max) return s;
-    if (max <= 1) return s.slice(0, max);
-    return s.slice(0, Math.max(0, max - 1)) + '…';
-  };
-
-  const shortStats = (url) => {
-    try {
-      const u = new URL(url);
-      // include host (preserve port) and a distinguishing tail from the path
-      const parts = u.pathname.split('/').filter(Boolean);
-      const tail = parts.length ? `/${parts[parts.length - 1]}` : '';
-      return `${u.host}${tail}`;
-    } catch {
-      return safeUrl(url);
-    }
-  };
-
-  const titleCase = (s) => s.replace(/\b([a-z])/g, (m, c) => c.toUpperCase());
-  const toMapShortName = (value) => {
-    if (typeof value !== 'string' || !value.trim()) return 'Unknown';
-    let s = value.trim();
-    // If looks like id form e.g. omaha_beach_warfare
-    if (/[_]/.test(s)) {
-      s = s.replace(/_(warfare|offensive|skirmish)$/i, '');
-      s = s.replace(/_/g, ' ');
-      s = titleCase(s);
-      return s;
-    }
-    // Strip trailing mode words
-    s = s.replace(/\s+(Warfare|Offensive|Skirmish)\s*$/i, '');
-    // Normalize unknown strings, including 'unknown warfare'
-    if (/^unknown(\s+warfare)?\b/i.test(s)) return 'Unknown';
-    return s;
-  };
-  const rows = statuses.map((status) => {
-  const serverName = status.name ? String(status.name) : 'Unknown';
-  const preferredName = status.alias
-    ? String(status.alias)
-    : status.shortName
-      ? String(status.shortName)
-      : serverName;
-  const withShort = truncate(preferredName, 26);
-
-    const isOk = status.status === 'success';
-  const currentMap = isOk ? (status.currentMap || 'Unknown') : (status.error || 'Offline');
-  const matchScore = isOk ? `${status.alliesScore ?? 0}-${status.axisScore ?? 0}` : 'ERR';
-  const mapShort = truncate(toMapShortName(currentMap), 18);
-    const total = isOk
-      ? (typeof status.totalPlayers === 'number'
-          ? status.totalPlayers
-          : (status.alliesPlayers ?? 0) + (status.axisPlayers ?? 0))
-      : 0;
-    const alliesVsAxis = isOk
-      ? `${status.alliesPlayers ?? 0}-${status.axisPlayers ?? 0}`
-      : '0-0';
-  const nextMap = truncate(isOk ? toMapShortName(status.nextMap || 'Unknown') : 'Unknown', 16);
-  const updated = formatRelativeFromIso(status.fetchedAt);
-
-    return [
-      withShort,
-      mapShort,
-      matchScore,
-      String(total),
-      alliesVsAxis,
-      nextMap,
-      updated,
-    ];
-  });
-
-  const widths = headers.map((header, index) => {
-    const colValues = rows.map((row) => row[index] ?? '');
-    return Math.max(header.length, ...colValues.map((value) => value.length));
-  });
-
-  const renderRow = (row) =>
-    row
-      .map((value, index) => {
-        const cell = value ?? '';
-        return cell.padEnd(widths[index], ' ');
-      })
-      .join(' | ');
-
-  const separator = widths.map((width) => '-'.repeat(width)).join('-|-');
-  // Insert a thin dashed stub between rows and once after the header separator
-  const interRowSeparator = '---';
-  const bodyLines = [];
-  for (let i = 0; i < rows.length; i++) {
-    // Add stub before each row (places one after header and between rows)
-    bodyLines.push(interRowSeparator);
-    bodyLines.push(renderRow(rows[i]));
-  }
-  const output = [renderRow(headers), separator, ...bodyLines].join('\n');
-
-  return ['```', output, '```'].join('\n');
+function titleCase(value) {
+  return value.replace(/\b([a-z])/g, (match, ch) => ch.toUpperCase());
 }
 
-// 4) NEW: multi-message splitter (keeps header per chunk, wraps each chunk in its own ``` fence)
+function toMapShortName(value) {
+  if (typeof value !== 'string' || !value.trim()) return 'Unknown';
+  let text = value.trim();
+  if (/[_]/.test(text)) {
+    text = text.replace(/_(warfare|offensive|skirmish)$/i, '');
+    text = text.replace(/_/g, ' ');
+    return titleCase(text);
+  }
+  text = text.replace(/\s+(Warfare|Offensive|Skirmish)\s*$/i, '');
+  if (/^unknown(\s+warfare)?\b/i.test(text)) return 'Unknown';
+  return text;
+}
+
+function getPreferredServerName(status) {
+  const serverName = status.name ? String(status.name) : 'Unknown';
+  if (status.alias) return String(status.alias);
+  if (status.shortName) return String(status.shortName);
+  return serverName;
+}
+
+function getTotalPlayers(status) {
+  if (typeof status.totalPlayers === 'number') {
+    return status.totalPlayers;
+  }
+  return (status.alliesPlayers ?? 0) + (status.axisPlayers ?? 0);
+}
+
+function getServerRank(status) {
+  if (status.status !== 'success') return -1;
+  return getTotalPlayers(status);
+}
+
+function getServerStateLabel(status) {
+  if (status.status !== 'success') {
+    return 'OFFLINE';
+  }
+
+  const totalPlayers = getTotalPlayers(status);
+  if (totalPlayers >= 90) return 'HOT';
+  if (totalPlayers >= 70) return 'LIVE';
+  if (totalPlayers >= 35) return 'WARM';
+  return 'SEEDING';
+}
+
+function buildServerBlock(status) {
+  const preferredName = getPreferredServerName(status);
+  const updated = formatRelativeFromIso(status.fetchedAt);
+
+  if (status.status !== 'success') {
+    return [
+      `**${preferredName}**  [OFFLINE]`,
+      `Error: ${status.error || 'Unavailable'}`,
+      `Seen: ${updated}`,
+    ].join('\n');
+  }
+
+  const currentMap = toMapShortName(status.currentMap || 'Unknown');
+  const nextMap = toMapShortName(status.nextMap || 'Unknown');
+  const totalPlayers = getTotalPlayers(status);
+  const alliesPlayers = status.alliesPlayers ?? 0;
+  const axisPlayers = status.axisPlayers ?? 0;
+  const alliesScore = status.alliesScore ?? 0;
+  const axisScore = status.axisScore ?? 0;
+  const summaryLine = [currentMap, `${totalPlayers} players`];
+  const matchLine = [`A/X ${alliesPlayers}-${axisPlayers}`, `Score ${alliesScore}-${axisScore}`];
+
+  if (typeof status.timeRemainingSeconds === 'number') {
+    matchLine.push(`${formatSeconds(status.timeRemainingSeconds)} left`);
+  }
+
+  const lines = [
+    `**${preferredName}**  [${getServerStateLabel(status)}]`,
+    summaryLine.join(' | '),
+    matchLine.join(' | '),
+    `Next: ${nextMap}`,
+  ];
+
+  lines.push(`Seen: ${updated}`);
+  return lines.join('\n');
+}
+
+function buildDiscordMessage(statuses) {
+  if (!Array.isArray(statuses) || statuses.length === 0) {
+    return `**${SCOREBOARD_TITLE}**\nNo servers configured.`;
+  }
+
+  const orderedStatuses = [...statuses].sort((left, right) => {
+    const rankDiff = getServerRank(right) - getServerRank(left);
+    if (rankDiff !== 0) return rankDiff;
+    return getPreferredServerName(left).localeCompare(getPreferredServerName(right));
+  });
+
+  const blocks = orderedStatuses.map(buildServerBlock);
+  return `**${SCOREBOARD_TITLE}**\n\n${blocks.join('\n\n')}`;
+}
+
 function buildDiscordMessages(statuses, maxLen = 1800) {
-  const full = buildDiscordMessage(statuses);
-  if (full.length <= maxLen) return [full];
+  const message = buildDiscordMessage(statuses);
+  if (message.length <= maxLen) {
+    return [message];
+  }
 
-  // We need to split by rows but keep header/separator on every chunk.
-  const lines = full.split('\n');
-  if (lines.length < 5) return [full]; // unexpected, just return as-is
+  const blocks = Array.isArray(statuses) && statuses.length > 0
+    ? [...statuses]
+        .sort((left, right) => {
+          const rankDiff = getServerRank(right) - getServerRank(left);
+          if (rankDiff !== 0) return rankDiff;
+          return getPreferredServerName(left).localeCompare(getPreferredServerName(right));
+        })
+        .map(buildServerBlock)
+    : ['No servers configured.'];
 
-  // lines[0] = "```", lines[1] = header, lines[2] = sep, ..., lines[last] = "```"
-  const headerFenceStart = lines[0];
-  const headerLine = lines[1];
-  const sepLine = lines[2];
-  const fenceEnd = lines[lines.length - 1];
-  const dataRows = lines.slice(3, -1);
-
+  const header = `**${SCOREBOARD_TITLE}**`;
   const chunks = [];
-  let current = [headerFenceStart, headerLine, sepLine];
-  for (const row of dataRows) {
-    // +1 for newline when joined; be conservative
-    const prospective = [...current, row, fenceEnd].join('\n');
-    if (prospective.length > maxLen) {
-      // close current chunk
-      current.push(fenceEnd);
-      chunks.push(current.join('\n'));
-      // start new chunk with header again
-      current = [headerFenceStart, headerLine, sepLine, row];
-    } else {
-      current.push(row);
+  let current = header;
+
+  for (const block of blocks) {
+    const separator = current === header ? '\n\n' : '\n\n';
+    const candidate = `${current}${separator}${block}`;
+    if (candidate.length > maxLen && current !== header) {
+      chunks.push(current);
+      current = `${header}\n\n${block}`;
+      continue;
     }
+    current = candidate;
   }
-  // flush last
-  if (current.length) {
-    current.push(fenceEnd);
-    chunks.push(current.join('\n'));
+
+  if (current) {
+    chunks.push(current);
   }
+
   return chunks;
 }
 
@@ -484,6 +470,6 @@ module.exports = {
   fetchServerStatuses,
   buildDiscordMessage,
   buildDiscordMessages,
-  
+  SCOREBOARD_TITLE,
   formatSeconds,
 };

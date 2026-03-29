@@ -18,6 +18,7 @@ const { Client, GatewayIntentBits, Partials, Events, SlashCommandBuilder } = req
 const {
   fetchServerStatuses,
   buildDiscordMessages,
+  SCOREBOARD_TITLE,
 } = require('./scoreboard');
 
 const BOT_TOKEN = process.env.DISCORD_BOT_TOKEN;
@@ -54,8 +55,6 @@ let lastMessageIds = [];
 let postingIntervalMinutes = DEFAULT_INTERVAL_MINUTES;
 let intervalHandle = null;
 let inFlight = false;
-const SCOREBOARD_HEADER_TOKEN = 'Server';
-
 const slashCommands = [
   new SlashCommandBuilder()
     .setName('setfrequency')
@@ -203,8 +202,7 @@ async function upsertMessages(channel, messages, roleId) {
 function isScoreboardMessageContent(content) {
   if (typeof content !== 'string') return false;
   const text = content.trim();
-  if (!text.includes('```')) return false;
-  return text.includes(SCOREBOARD_HEADER_TOKEN) && text.includes('| Updated');
+  return text.includes(SCOREBOARD_TITLE);
 }
 
 async function recoverLastScoreboardMessageIds(channel, botUserId) {
